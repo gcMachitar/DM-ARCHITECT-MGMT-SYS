@@ -1,0 +1,427 @@
+@import "tailwindcss";
+
+:root {
+  --background: #edf7e4;
+  --foreground: #263f19;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: #cbea86;
+  color: #1b3013;
+}
+
+:focus-visible {
+  outline: 2px solid #36531c;
+  outline-offset: 3px;
+}
+
+html {
+  scroll-padding-top: 1rem;
+}
+
+.surface-pop,
+.focus-card,
+.project-card,
+.metric-tile,
+.reveal-card {
+  transform: translateZ(0);
+}
+
+.surface-pop {
+  transition-duration: 180ms;
+}
+
+.focus-card,
+.project-card,
+.metric-tile {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.focus-card:hover,
+.project-card:hover,
+.metric-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgb(38 63 25 / 0.1);
+}
+
+.icon-tile,
+.stat-icon {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid rgb(38 63 25 / 0.12);
+  background: linear-gradient(135deg, #ffffff, #e7f6cf);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8);
+}
+
+.icon-tile {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+}
+
+.icon-tile.danger {
+  background: linear-gradient(135deg, #ffffff, #fee2e2);
+  border-color: rgb(127 29 29 / 0.16);
+}
+
+.icon-tile.warn {
+  background: linear-gradient(135deg, #ffffff, #fef3c7);
+  border-color: rgb(113 63 18 / 0.16);
+}
+
+.stat-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.45rem;
+  opacity: 0.9;
+}
+
+.workspace-icon,
+.stat-icon::before,
+.stat-icon::after {
+  position: absolute;
+  content: "";
+}
+
+.workspace-icon {
+  inset: 0.55rem;
+}
+
+.icon-projects {
+  border: 2px solid #36531c;
+  border-radius: 0.25rem;
+}
+
+.icon-projects::before,
+.icon-projects::after {
+  position: absolute;
+  left: 0.2rem;
+  right: 0.2rem;
+  height: 2px;
+  background: #7cac2a;
+  content: "";
+}
+
+.icon-projects::before {
+  top: 0.27rem;
+}
+
+.icon-projects::after {
+  bottom: 0.27rem;
+}
+
+.icon-manpower::before,
+.icon-manpower::after,
+.stat-icon.icon-manpower::before,
+.stat-icon.icon-manpower::after {
+  position: absolute;
+  border-radius: 999px;
+  background: #36531c;
+  content: "";
+}
+
+.icon-manpower::before,
+.stat-icon.icon-manpower::before {
+  width: 0.72rem;
+  height: 0.72rem;
+  top: 0.18rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.icon-manpower::after,
+.stat-icon.icon-manpower::after {
+  width: 1.3rem;
+  height: 0.62rem;
+  right: 0.14rem;
+  bottom: 0.12rem;
+  left: 0.14rem;
+}
+
+.icon-contracts {
+  border: 2px solid #36531c;
+  border-radius: 0.2rem;
+}
+
+.icon-contracts::before,
+.icon-contracts::after {
+  position: absolute;
+  right: 0.18rem;
+  left: 0.18rem;
+  height: 2px;
+  background: #7cac2a;
+  content: "";
+}
+
+.icon-contracts::before {
+  top: 0.32rem;
+}
+
+.icon-contracts::after {
+  top: 0.68rem;
+}
+
+.icon-services {
+  border: 2px solid #36531c;
+  border-radius: 999px;
+}
+
+.icon-services::before {
+  position: absolute;
+  inset: 0.23rem;
+  border: 2px solid #7cac2a;
+  border-radius: 999px;
+  content: "";
+}
+
+.icon-services::after {
+  position: absolute;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 999px;
+  background: #36531c;
+  content: "";
+}
+
+.icon-payroll {
+  border: 2px solid #36531c;
+  border-radius: 0.18rem;
+}
+
+.icon-payroll::before {
+  position: absolute;
+  top: 0.28rem;
+  right: -0.12rem;
+  width: 0.72rem;
+  height: 0.72rem;
+  border: 2px solid #7cac2a;
+  border-radius: 999px;
+  background: #f8fcf1;
+  content: "";
+}
+
+.icon-payroll::after {
+  position: absolute;
+  right: 0.28rem;
+  bottom: 0.24rem;
+  left: 0.2rem;
+  height: 2px;
+  background: #7cac2a;
+  box-shadow: 0 -0.34rem 0 #7cac2a;
+  content: "";
+}
+
+.icon-progress::before {
+  position: absolute;
+  right: 0.32rem;
+  bottom: 0.42rem;
+  left: 0.32rem;
+  height: 0.26rem;
+  border-radius: 999px;
+  background: #cfea87;
+  content: "";
+}
+
+.icon-progress::after {
+  position: absolute;
+  bottom: 0.42rem;
+  left: 0.32rem;
+  width: 1rem;
+  height: 0.26rem;
+  border-radius: 999px;
+  background: #36531c;
+  content: "";
+}
+
+.icon-risk::before {
+  position: absolute;
+  top: 0.26rem;
+  left: 50%;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #7f1d1d;
+  border-radius: 0.15rem;
+  content: "";
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.icon-risk::after {
+  position: absolute;
+  top: 0.55rem;
+  left: 50%;
+  width: 0.16rem;
+  height: 0.58rem;
+  border-radius: 999px;
+  background: #7f1d1d;
+  box-shadow: 0 0.74rem 0 #7f1d1d;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.icon-schedule::before {
+  position: absolute;
+  inset: 0.22rem;
+  border: 2px solid #713f12;
+  border-radius: 999px;
+  content: "";
+}
+
+.icon-schedule::after {
+  position: absolute;
+  top: 0.54rem;
+  left: 50%;
+  width: 0.42rem;
+  height: 0.62rem;
+  border-bottom: 2px solid #713f12;
+  border-left: 2px solid #713f12;
+  content: "";
+  transform-origin: bottom left;
+}
+
+.stat-icon.icon-projects::before {
+  inset: 0.48rem;
+  border: 2px solid currentColor;
+  border-radius: 0.22rem;
+}
+
+.stat-icon.icon-projects::after {
+  right: 0.64rem;
+  bottom: 0.8rem;
+  left: 0.64rem;
+  height: 2px;
+  background: currentColor;
+}
+
+.stat-icon.icon-progress::before,
+.stat-icon.icon-progress::after,
+.stat-icon.icon-risk::before,
+.stat-icon.icon-risk::after {
+  color: #36531c;
+}
+
+.bg-olive-900 .stat-icon {
+  background: rgb(255 255 255 / 0.12);
+  border-color: rgb(255 255 255 / 0.2);
+}
+
+.bg-olive-900 .stat-icon.icon-risk::before,
+.bg-olive-900 .stat-icon.icon-risk::after {
+  color: #fef2f2;
+}
+
+.payroll-row {
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.payroll-row:hover {
+  background: #f8fcf1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-card {
+    animation: fade-slide-up 420ms ease both;
+  }
+
+  .surface-pop {
+    animation: fade-slide-up 360ms ease both;
+  }
+
+  .icon-tile,
+  .stat-icon {
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .group:hover .icon-tile,
+  .focus-card:hover .icon-tile,
+  .surface-pop:hover .stat-icon {
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 8px 16px rgb(38 63 25 / 0.12);
+  }
+
+  .project-card:hover [role="progressbar"] > div {
+    animation: progress-shine 900ms ease;
+  }
+
+  .payroll-row:hover {
+    transform: translateX(2px);
+  }
+
+  @keyframes fade-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes progress-shine {
+    0% {
+      filter: brightness(1);
+    }
+
+    45% {
+      filter: brightness(1.13);
+    }
+
+    100% {
+      filter: brightness(1);
+    }
+  }
+}
+
+@layer utilities {
+  .text-olive-600 {
+    color: #527326;
+  }
+
+  .text-olive-700 {
+    color: #49651f;
+  }
+
+  .text-olive-800 {
+    color: #36531c;
+  }
+
+  .text-olive-900 {
+    color: #263f19;
+  }
+
+  .text-olive-950 {
+    color: #1b3013;
+  }
+
+  .bg-olive-900 {
+    background-color: #263f19;
+  }
+
+  .ring-olive-800 {
+    --tw-ring-color: #36531c;
+  }
+}
