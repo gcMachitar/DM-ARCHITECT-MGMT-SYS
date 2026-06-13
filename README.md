@@ -56,6 +56,7 @@ The system is designed specifically for architectural firm operations, ensuring 
 
 ### Frontend & Backend Framework
 
+*Javascript
 * Next.js (App Router, Server Actions, API Routes)
 * React.js
 
@@ -72,6 +73,9 @@ The system is designed specifically for architectural firm operations, ensuring 
 * Visual Studio Code
 * Git
 * GitHub
+
+### Hosting and Deployment
+*Vercel
 
 ---
 
@@ -179,7 +183,7 @@ Stores calendar schedules (time, item, place).
 
 ## Developers
 
-Ar. Denise Mercado - Lead Architect & Developer
+SPR Devs - Gian Machitar, Daryl Masapa
 
 System Analysis and Design
 
