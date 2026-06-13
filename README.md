@@ -183,7 +183,7 @@ Stores calendar schedules (time, item, place).
 
 ## Developers
 
-SPR Devs - Gian Machitar, Daryl Masapa
+SPR Devs - Gian Machitar, Daryll Masapa
 
 System Analysis and Design
 
