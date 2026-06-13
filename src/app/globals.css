@@ -396,6 +396,78 @@ html {
   }
 }
 
+.login-shell {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgb(152 200 61 / 0.28), transparent 34%),
+    radial-gradient(circle at bottom right, rgb(229 243 207 / 0.95), transparent 42%),
+    #edf7e4;
+}
+
+.login-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(54 83 28 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(54 83 28 / 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(circle at center, black, transparent 88%);
+}
+
+.login-glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+.login-glow-a {
+  top: -6rem;
+  right: 8%;
+  width: 18rem;
+  height: 18rem;
+  background: rgb(152 200 61 / 0.35);
+}
+
+.login-glow-b {
+  bottom: -8rem;
+  left: 6%;
+  width: 22rem;
+  height: 22rem;
+  background: rgb(207 234 135 / 0.45);
+}
+
+.login-card {
+  animation-delay: 80ms;
+}
+
+.login-feature-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.login-feature-dot {
+  margin-top: 0.45rem;
+  height: 0.45rem;
+  width: 0.45rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #98c83d, #527326);
+  box-shadow: 0 0 0 4px rgb(152 200 61 / 0.18);
+}
+
+.login-submit {
+  background: linear-gradient(135deg, #36531c, #263f19);
+  box-shadow: 0 12px 24px rgb(38 63 25 / 0.18);
+}
+
+.login-submit:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgb(38 63 25 / 0.22);
+}
+
 @layer utilities {
   .text-olive-600 {
     color: #527326;

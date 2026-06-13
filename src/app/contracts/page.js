@@ -1,4 +1,5 @@
-import { contractItems, projects } from "../data";
+import { getSupabaseAdmin } from "@/lib/supabase";
+import { contractItems as mockContractItems, projects as mockProjects } from "../data";
 import {
   PageHeader,
   Panel,
@@ -8,7 +9,34 @@ import {
   StatusPill,
 } from "../_components/ui";
 
-export default function ContractsPage() {
+export default async function ContractsPage() {
+  const supabase = getSupabaseAdmin();
+  const { data: dbContracts } = await supabase.from("contracts").select("*");
+  const contractItems = dbContracts && dbContracts.length > 0
+    ? dbContracts.map(c => [c.item, c.project, c.amount, c.status, c.owner])
+    : mockContractItems;
+
+  const { data: dbProjects } = await supabase.from("projects").select("*");
+  const projects = dbProjects && dbProjects.length > 0
+    ? dbProjects.map(p => ({
+        slug: p.slug,
+        name: p.name,
+        client: p.client,
+        location: p.location,
+        phase: p.phase,
+        foreman: p.foreman,
+        siteEngineer: p.site_engineer,
+        architect: p.architect,
+        crew: p.crew,
+        budget: p.budget,
+        spent: p.spent,
+        progress: p.progress,
+        due: p.due,
+        status: p.status,
+        nextMilestone: p.next_milestone,
+        risk: p.risk,
+      }))
+    : mockProjects;
   return (
     <main>
       <PageHeader
@@ -46,7 +74,7 @@ export default function ContractsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-lime-900/10 bg-white">
-                  {contractItems.map(([item, project, amount, status], index) => (
+                  {contractItems.map(([item, project, amount, status, owner], index) => (
                     <tr key={item}>
                       <td className="px-4 py-4 font-black text-olive-950">
                         {item}
@@ -58,12 +86,12 @@ export default function ContractsPage() {
                         {amount}
                       </td>
                       <td className="px-4 py-4">
-                        <StatusPill tone={index === 1 ? "warn" : "neutral"}>
+                        <StatusPill tone={status === "Client review" || index === 1 ? "warn" : "neutral"}>
                           {status}
                         </StatusPill>
                       </td>
                       <td className="px-4 py-4 text-sm font-bold text-olive-800">
-                        {index % 2 === 0 ? "Accounting" : "Management"}
+                        {owner || (index % 2 === 0 ? "Accounting" : "Management")}
                       </td>
                     </tr>
                   ))}

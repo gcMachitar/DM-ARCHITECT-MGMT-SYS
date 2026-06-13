@@ -3,6 +3,32 @@
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
+import {
+  createProject,
+  createWorkOrder,
+  assignCrew,
+  createBilling,
+  logRequest,
+  addPayrollEmployee,
+  recordCashAdvance,
+  approvePayroll,
+  assignSelectedRequests,
+  submitDailyReport,
+} from "../actions";
+
+const actionSubmitters = {
+  "daily-report": submitDailyReport,
+  "new-project": createProject,
+  "add-project": createProject,
+  "work-order": createWorkOrder,
+  "assign-crew": assignCrew,
+  "new-billing": createBilling,
+  "log-request": logRequest,
+  "assign-selected": assignSelectedRequests,
+  "add-payroll-employee": addPayrollEmployee,
+  "record-ca": recordCashAdvance,
+  "approve-payroll": approvePayroll,
+};
 
 const actionCopy = {
   "daily-report": {
@@ -138,6 +164,7 @@ export function ActionButton({
   const modalId = useId();
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const copy = actionCopy[action] || actionCopy["work-order"];
   const hasValues = Object.values(values).some((value) => value.trim());
   const baseClass =
@@ -150,7 +177,20 @@ export function ActionButton({
     setValues({});
   }
 
-  function saveDraft() {
+  async function saveDraft() {
+    setIsSubmitting(true);
+    try {
+      const submitter = actionSubmitters[action];
+      if (submitter) {
+        await submitter(values);
+      }
+    } catch (err) {
+      console.error("Action submission failed:", err);
+      alert("Failed to save action: " + err.message);
+      setIsSubmitting(false);
+      return;
+    }
+
     const draft = {
       action,
       title: copy.title,
@@ -194,6 +234,7 @@ export function ActionButton({
       URL.revokeObjectURL(url);
     }
 
+    setIsSubmitting(false);
     closeModal();
   }
 
@@ -306,12 +347,21 @@ export function ActionButton({
               Cancel
             </button>
             <button
-              className="rounded-md bg-olive-900 px-4 py-2 text-sm font-bold text-lime-50 disabled:cursor-not-allowed disabled:opacity-45"
-              disabled={!hasValues}
+              className="rounded-md bg-olive-900 px-4 py-2 text-sm font-bold text-lime-50 disabled:cursor-not-allowed disabled:opacity-45 flex items-center justify-center gap-2"
+              disabled={!hasValues || isSubmitting}
               onClick={saveDraft}
               type="button"
             >
-              {copy.fileName ? "Save and download" : "Save draft"}
+              {isSubmitting ? (
+                <>
+                  <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Saving...
+                </>
+              ) : copy.fileName ? (
+                "Save and download"
+              ) : (
+                "Save draft"
+              )}
             </button>
           </div>
         </div>

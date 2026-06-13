@@ -1,3 +1,4 @@
+import { getSupabaseAdmin } from "@/lib/supabase";
 import {
   PageHeader,
   Panel,
@@ -14,7 +15,7 @@ const payrollPeriod = {
   status: "For review",
 };
 
-const employees = [
+const mockEmployees = [
   {
     name: "Ramon Bautista",
     role: "Foreman",
@@ -132,7 +133,26 @@ function receiptTone(status) {
   return "good";
 }
 
-export default function PayrollPage() {
+export default async function PayrollPage() {
+  const supabase = getSupabaseAdmin();
+  const { data: dbEmployees } = await supabase.from("employees").select("*");
+  const employees = dbEmployees && dbEmployees.length > 0
+    ? dbEmployees.map(e => ({
+        name: e.name,
+        role: e.role,
+        project: e.project,
+        days: e.days,
+        rate: e.rate,
+        overtime: e.overtime,
+        cashAdvance: e.cash_advance,
+        caBalance: e.ca_balance,
+        deductions: e.deductions,
+        releaseMethod: e.release_method,
+        receiptStatus: e.receipt_status,
+        status: e.status,
+      }))
+    : mockEmployees;
+
   const grossTotal = employees.reduce((sum, employee) => sum + grossPay(employee), 0);
   const caDeducted = employees.reduce((sum, employee) => sum + employee.cashAdvance, 0);
   const caOutstanding = employees.reduce((sum, employee) => sum + employee.caBalance, 0);

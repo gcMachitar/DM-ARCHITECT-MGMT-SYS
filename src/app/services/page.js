@@ -1,4 +1,5 @@
-import { serviceRequests } from "../data";
+import { getSupabaseAdmin } from "@/lib/supabase";
+import { serviceRequests as mockServiceRequests } from "../data";
 import {
   PageHeader,
   Panel,
@@ -15,7 +16,12 @@ const serviceLines = [
   ["Interior Fit-Out", "Finish boards, joinery, ceiling, lighting, and turnover punch lists.", "3 scopes"],
 ];
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const supabase = getSupabaseAdmin();
+  const { data: dbRequests } = await supabase.from("service_requests").select("*");
+  const serviceRequests = dbRequests && dbRequests.length > 0
+    ? dbRequests.map(r => [r.task, r.project, r.owner, r.due, r.stage])
+    : mockServiceRequests;
   return (
     <main>
       <PageHeader
@@ -74,7 +80,7 @@ export default function ServicesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-lime-900/10 bg-white">
-                  {serviceRequests.map(([task, project, owner, due], index) => (
+                  {serviceRequests.map(([task, project, owner, due, stage], index) => (
                     <tr key={task}>
                       <td className="px-4 py-4 font-black text-olive-950">
                         {task}
@@ -91,7 +97,7 @@ export default function ServicesPage() {
                         </StatusPill>
                       </td>
                       <td className="px-4 py-4 text-sm text-olive-700">
-                        {index % 2 === 0 ? "Review" : "In progress"}
+                        {stage || (index % 2 === 0 ? "Review" : "In progress")}
                       </td>
                     </tr>
                   ))}

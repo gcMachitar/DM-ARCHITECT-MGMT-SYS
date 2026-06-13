@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { contractItems, projects, schedule, serviceRequests } from "./data";
+import { getSupabaseAdmin } from "@/lib/supabase";
+import { contractItems as mockContractItems, projects as mockProjects, schedule as mockSchedule, serviceRequests as mockServiceRequests } from "./data";
 import {
   PageHeader,
   Panel,
@@ -30,18 +31,58 @@ function riskTone(risk) {
   return "good";
 }
 
-export default function OverviewPage() {
+export default async function OverviewPage() {
+  const supabase = getSupabaseAdmin();
+
+  // Fetch from Supabase with safe error handling and fallback
+  const { data: dbProjects } = await supabase.from("projects").select("*");
+  const projects = dbProjects && dbProjects.length > 0
+    ? dbProjects.map(p => ({
+        slug: p.slug,
+        name: p.name,
+        client: p.client,
+        location: p.location,
+        phase: p.phase,
+        foreman: p.foreman,
+        siteEngineer: p.site_engineer,
+        architect: p.architect,
+        crew: p.crew,
+        budget: p.budget,
+        spent: p.spent,
+        progress: p.progress,
+        due: p.due,
+        status: p.status,
+        nextMilestone: p.next_milestone,
+        risk: p.risk,
+      }))
+    : mockProjects;
+
+  const { data: dbSchedules } = await supabase.from("schedules").select("*");
+  const schedule = dbSchedules && dbSchedules.length > 0
+    ? dbSchedules.map(s => [s.time, s.item, s.place])
+    : mockSchedule;
+
+  const { data: dbRequests } = await supabase.from("service_requests").select("*");
+  const serviceRequests = dbRequests && dbRequests.length > 0
+    ? dbRequests.map(r => [r.task, r.project, r.owner, r.due, r.stage])
+    : mockServiceRequests;
+
+  const { data: dbContracts } = await supabase.from("contracts").select("*");
+  const contractItems = dbContracts && dbContracts.length > 0
+    ? dbContracts.map(c => [c.item, c.project, c.amount, c.status])
+    : mockContractItems;
+
   const urgent = projects.filter((project) => project.risk !== "Low").length;
   const totalCrew = projects.reduce((sum, project) => sum + project.crew, 0);
-  const averageProgress = Math.round(
-    projects.reduce((sum, project) => sum + project.progress, 0) /
-      projects.length
-  );
+  const averageProgress = projects.length > 0
+    ? Math.round(projects.reduce((sum, project) => sum + project.progress, 0) / projects.length)
+    : 0;
   const priorityProjects = [...projects].sort((first, second) => {
     const riskDiff = riskWeight[second.risk] - riskWeight[first.risk];
     return riskDiff || first.progress - second.progress;
   });
-  const topPriority = priorityProjects[0];
+  const topPriority = priorityProjects[0] || { name: "No active projects", nextMilestone: "N/A" };
+
 
   return (
     <main>

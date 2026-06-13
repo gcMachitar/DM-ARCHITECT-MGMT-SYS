@@ -1,4 +1,5 @@
-import { manpower, projects } from "../data";
+import { getSupabaseAdmin } from "@/lib/supabase";
+import { manpower as mockManpower, projects as mockProjects } from "../data";
 import {
   PageHeader,
   Panel,
@@ -8,9 +9,36 @@ import {
   StatusPill,
 } from "../_components/ui";
 
-export default function ManpowerPage() {
+export default async function ManpowerPage() {
+  const supabase = getSupabaseAdmin();
+  const { data: dbManpower } = await supabase.from("manpower").select("*");
+  const manpower = dbManpower && dbManpower.length > 0 ? dbManpower : mockManpower;
+
+  const { data: dbProjects } = await supabase.from("projects").select("*");
+  const projects = dbProjects && dbProjects.length > 0
+    ? dbProjects.map(p => ({
+        slug: p.slug,
+        name: p.name,
+        client: p.client,
+        location: p.location,
+        phase: p.phase,
+        foreman: p.foreman,
+        siteEngineer: p.site_engineer,
+        architect: p.architect,
+        crew: p.crew,
+        budget: p.budget,
+        spent: p.spent,
+        progress: p.progress,
+        due: p.due,
+        status: p.status,
+        nextMilestone: p.next_milestone,
+        risk: p.risk,
+      }))
+    : mockProjects;
+
   const deployed = manpower.reduce((sum, group) => sum + group.deployed, 0);
   const standby = manpower.reduce((sum, group) => sum + group.standby, 0);
+
 
   return (
     <main>

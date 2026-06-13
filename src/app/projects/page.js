@@ -1,4 +1,5 @@
-import { projects } from "../data";
+import { getSupabaseAdmin } from "@/lib/supabase";
+import { projects as mockProjects } from "../data";
 import {
   PageHeader,
   Panel,
@@ -8,7 +9,31 @@ import {
   StatusPill,
 } from "../_components/ui";
 
-export default function ProjectsPage() {
+export default async function ProjectsPage() {
+  const supabase = getSupabaseAdmin();
+  const { data: dbProjects } = await supabase.from("projects").select("*");
+  
+  const projects = dbProjects && dbProjects.length > 0
+    ? dbProjects.map(p => ({
+        slug: p.slug,
+        name: p.name,
+        client: p.client,
+        location: p.location,
+        phase: p.phase,
+        foreman: p.foreman,
+        siteEngineer: p.site_engineer,
+        architect: p.architect,
+        crew: p.crew,
+        budget: p.budget,
+        spent: p.spent,
+        progress: p.progress,
+        due: p.due,
+        status: p.status,
+        nextMilestone: p.next_milestone,
+        risk: p.risk,
+      }))
+    : mockProjects;
+
   return (
     <main>
       <PageHeader

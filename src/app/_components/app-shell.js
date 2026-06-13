@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ActionButton } from "./action-modal";
+import { logout } from "../actions";
 
 const navItems = [
   ["Overview", "/", "Start here"],
@@ -15,13 +16,17 @@ const navItems = [
 export function AppShell({ children }) {
   const pathname = usePathname();
 
+  if (pathname === "/login") {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[300px_1fr]">
       <aside className="border-b border-lime-900/10 bg-[#98c83d] lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-4 px-4 py-4 lg:block lg:px-5">
           <Link className="flex items-center gap-3" href="/">
-            <div className="grid h-11 w-11 place-items-center rounded-full bg-[#eef8df] text-sm font-black text-olive-800 shadow-inner">
-              DM
+            <div className="grid h-11 w-11 overflow-hidden place-items-center rounded-full bg-[#eef8df] text-sm font-black text-olive-800 shadow-inner">
+              <img src="/logo.jpg" alt="DM Logo" className="h-full w-full object-cover" />
             </div>
             <div>
               <p className="text-sm font-black text-olive-950">DM Architect</p>
@@ -64,6 +69,17 @@ export function AppShell({ children }) {
               </Link>
             );
           })}
+          
+          {/* Sign Out Button */}
+          <button
+            onClick={() => logout()}
+            className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-bold text-left transition lg:block text-olive-900 hover:bg-red-50 hover:text-red-950 w-full cursor-pointer"
+          >
+            <span>Sign Out</span>
+            <span className="hidden text-xs font-semibold text-red-700/80 lg:mt-1 lg:block">
+              Exit operations command
+            </span>
+          </button>
         </nav>
 
         <div className="mx-5 mt-8 hidden rounded-lg border border-lime-900/10 bg-[#e5f3cf] p-4 lg:block">
