@@ -99,17 +99,17 @@ export function Panel({ title, subtitle, children, action }) {
   );
 }
 
-export function PrimaryButton({ action, children, href }) {
+export function PrimaryButton({ action, children, href, ...props }) {
   return (
-    <ActionButton action={action} href={href}>
+    <ActionButton action={action} href={href} {...props}>
       {children}
     </ActionButton>
   );
 }
 
-export function SecondaryButton({ action, children, href }) {
+export function SecondaryButton({ action, children, href, ...props }) {
   return (
-    <ActionButton action={action} href={href} variant="secondary">
+    <ActionButton action={action} href={href} variant="secondary" {...props}>
       {children}
     </ActionButton>
   );

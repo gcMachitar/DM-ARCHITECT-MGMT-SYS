@@ -8,6 +8,9 @@ import {
   StatCard,
   StatusPill,
 } from "../_components/ui";
+import { DeleteButton } from "../_components/delete-button";
+import { StatusDropdown } from "../_components/status-dropdown";
+import { deleteServiceRequest, updateServiceRequest } from "../actions";
 
 const serviceLines = [
   ["Architectural Design", "Concepts, schematic plans, design development, and permit sets.", "4 scopes"],
@@ -20,8 +23,8 @@ export default async function ServicesPage() {
   const supabase = getSupabaseAdmin();
   const { data: dbRequests } = await supabase.from("service_requests").select("*");
   const serviceRequests = dbRequests && dbRequests.length > 0
-    ? dbRequests.map(r => [r.task, r.project, r.owner, r.due, r.stage])
-    : mockServiceRequests;
+    ? dbRequests.map(r => ({ id: r.id, task: r.task, project: r.project, owner: r.owner, due: r.due, stage: r.stage }))
+    : mockServiceRequests.map(([task, project, owner, due, stage], index) => ({ id: `mock-${index}`, task, project, owner, due, stage }));
   return (
     <main>
       <PageHeader
@@ -77,27 +80,40 @@ export default async function ServicesPage() {
                     <th className="px-4 py-3">Owner</th>
                     <th className="px-4 py-3">Due</th>
                     <th className="px-4 py-3">Stage</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-lime-900/10 bg-white">
-                  {serviceRequests.map(([task, project, owner, due, stage], index) => (
-                    <tr key={task}>
+                  {serviceRequests.map((r, index) => (
+                    <tr key={r.id || r.task}>
                       <td className="px-4 py-4 font-black text-olive-950">
-                        {task}
+                        {r.task}
                       </td>
                       <td className="px-4 py-4 text-sm text-olive-700">
-                        {project}
+                        {r.project}
                       </td>
                       <td className="px-4 py-4 text-sm font-bold text-olive-800">
-                        {owner}
+                        {r.owner}
                       </td>
                       <td className="px-4 py-4">
-                        <StatusPill tone={due === "Today" ? "warn" : "neutral"}>
-                          {due}
+                        <StatusPill tone={r.due === "Today" ? "warn" : "neutral"}>
+                          {r.due}
                         </StatusPill>
                       </td>
-                      <td className="px-4 py-4 text-sm text-olive-700">
-                        {stage || (index % 2 === 0 ? "Review" : "In progress")}
+                      <td className="px-4 py-4 text-sm">
+                        <StatusDropdown
+                          id={r.id}
+                          currentValue={r.stage || (index % 2 === 0 ? "Review" : "In progress")}
+                          options={["Review", "In progress", "Done"]}
+                          onUpdate={updateServiceRequest}
+                        />
+                      </td>
+                      <td className="px-4 py-4 text-sm text-right">
+                        <DeleteButton
+                          id={r.id}
+                          onDelete={deleteServiceRequest}
+                          confirmMessage={`Are you sure you want to delete request "${r.task}"?`}
+                        />
                       </td>
                     </tr>
                   ))}

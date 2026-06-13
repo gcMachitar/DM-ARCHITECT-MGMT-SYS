@@ -327,3 +327,252 @@ export async function logout() {
   redirect("/login");
 }
 
+export async function deleteProject(slug) {
+  const supabase = getClient();
+  const { error } = await supabase.from("projects").delete().eq("slug", slug);
+  if (error) {
+    console.error("Error deleting project:", error);
+    throw new Error(error.message);
+  }
+  revalidatePath("/");
+  revalidatePath("/projects");
+  revalidatePath("/manpower");
+  return { success: true };
+}
+
+export async function updateProject(slug, values) {
+  const supabase = getClient();
+  
+  // Map fields to match database columns
+  const dbData = {
+    name: values["Project name"],
+    client: values["Client"],
+    location: values["Location"],
+    phase: values["Phase"],
+    foreman: values["Foreman"],
+    site_engineer: values["Site engineer"],
+    architect: values["Architect"],
+    crew: parseInt(values["Crew count"]) || 0,
+    budget: values["Budget"],
+    spent: values["Spent"],
+    progress: parseInt(values["Progress"]) || 0,
+    due: values["Due date"],
+    status: values["Status"],
+    next_milestone: values["Next milestone"],
+    risk: values["Risk"]
+  };
+
+  // Filter out undefined fields to allow partial updates
+  Object.keys(dbData).forEach(key => {
+    if (dbData[key] === undefined) {
+      delete dbData[key];
+    }
+  });
+
+  const { error } = await supabase.from("projects").update(dbData).eq("slug", slug);
+  if (error) {
+    console.error("Error updating project:", error);
+    throw new Error(error.message);
+  }
+  revalidatePath("/");
+  revalidatePath("/projects");
+  revalidatePath("/manpower");
+  return { success: true };
+}
+
+export async function deleteContract(id) {
+  const supabase = getClient();
+  const { error } = await supabase.from("contracts").delete().eq("id", id);
+  if (error) {
+    console.error("Error deleting contract:", error);
+    throw new Error(error.message);
+  }
+  revalidatePath("/");
+  revalidatePath("/contracts");
+  return { success: true };
+}
+
+export async function updateContract(id, values) {
+  console.log("updateContract called with ID:", id, "values:", values, "type:", typeof values);
+  const supabase = getClient();
+  const dbData = typeof values === "string" ? { status: values } : {
+    item: values["Billing description"] || values["Item"],
+    project: values["Project"],
+    amount: values["Amount"],
+    status: values["Status"],
+    owner: values["Owner"]
+  };
+
+  Object.keys(dbData).forEach(key => {
+    if (dbData[key] === undefined) {
+      delete dbData[key];
+    }
+  });
+
+  const { error } = await supabase.from("contracts").update(dbData).eq("id", id);
+  if (error) {
+    console.error("Error updating contract:", error);
+    throw new Error(error.message);
+  }
+  revalidatePath("/");
+  revalidatePath("/contracts");
+  return { success: true };
+}
+
+export async function deleteServiceRequest(id) {
+  const supabase = getClient();
+  const { error } = await supabase.from("service_requests").delete().eq("id", id);
+  if (error) {
+    console.error("Error deleting service request:", error);
+    throw new Error(error.message);
+  }
+  revalidatePath("/");
+  revalidatePath("/services");
+  return { success: true };
+}
+
+export async function updateServiceRequest(id, values) {
+  console.log("updateServiceRequest called with ID:", id, "values:", values, "type:", typeof values);
+  const supabase = getClient();
+  const dbData = typeof values === "string" ? { stage: values } : {
+    task: values["Task"] || values["Request"],
+    project: values["Project"],
+    owner: values["Owner"] || values["Assigned team"] || values["Assigned to"],
+    due: values["Due date"] || values["Due"],
+    stage: values["Stage"]
+  };
+
+  Object.keys(dbData).forEach(key => {
+    if (dbData[key] === undefined) {
+      delete dbData[key];
+    }
+  });
+
+  const { error } = await supabase.from("service_requests").update(dbData).eq("id", id);
+  if (error) {
+    console.error("Error updating service request:", error);
+    throw new Error(error.message);
+  }
+  revalidatePath("/");
+  revalidatePath("/services");
+  return { success: true };
+}
+
+export async function deleteEmployee(id) {
+  const supabase = getClient();
+  const { error } = await supabase.from("employees").delete().eq("id", id);
+  if (error) {
+    console.error("Error deleting employee:", error);
+    throw new Error(error.message);
+  }
+  revalidatePath("/payroll");
+  return { success: true };
+}
+
+export async function updateEmployee(id, values) {
+  const supabase = getClient();
+  const dbData = {
+    name: values["Employee name"] || values["Name"],
+    role: values["Role"],
+    project: values["Project / department"] || values["Project"],
+    days: parseInt(values["Days worked"]) || 0,
+    rate: parseInt(values["Daily rate"]) || 0,
+    overtime: parseInt(values["Overtime"]) || 0,
+    cash_advance: parseInt(values["Cash advance"]) || 0,
+    ca_balance: parseInt(values["CA balance"]) || 0,
+    deductions: parseInt(values["Deductions"]) || 0,
+    release_method: values["Release method"],
+    receipt_status: values["Receipt status"],
+    status: values["Status"]
+  };
+
+  Object.keys(dbData).forEach(key => {
+    if (dbData[key] === undefined) {
+      delete dbData[key];
+    }
+  });
+
+  const { error } = await supabase.from("employees").update(dbData).eq("id", id);
+  if (error) {
+    console.error("Error updating employee:", error);
+    throw new Error(error.message);
+  }
+  revalidatePath("/payroll");
+  return { success: true };
+}
+
+export async function createManpower(values) {
+  const supabase = getClient();
+  const trade = values["Trade"] || "General labor";
+  const total = parseInt(values["Total"]) || 0;
+  const deployed = parseInt(values["Deployed"]) || 0;
+  const standby = values["Standby"] !== undefined ? parseInt(values["Standby"]) : Math.max(0, total - deployed);
+  const lead = values["Lead foreman"] || values["Lead"] || "Site foreman";
+  const projects = values["Projects"] || "Unassigned";
+
+  const { error } = await supabase.from("manpower").insert({
+    trade,
+    total,
+    deployed,
+    standby,
+    lead,
+    projects,
+  });
+
+  if (error) {
+    console.error("Error creating manpower:", error);
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/manpower");
+  return { success: true };
+}
+
+export async function updateManpower(id, values) {
+  const supabase = getClient();
+  const { data: current } = await supabase.from("manpower").select("total, deployed").eq("id", id).single();
+  const newTotal = values["Total"] !== undefined ? (parseInt(values["Total"]) || 0) : (current?.total || 0);
+  const newDeployed = values["Deployed"] !== undefined ? (parseInt(values["Deployed"]) || 0) : (current?.deployed || 0);
+  const standby = Math.max(0, newTotal - newDeployed);
+
+  const dbData = {
+    trade: values["Trade"],
+    total: values["Total"] !== undefined ? newTotal : undefined,
+    deployed: values["Deployed"] !== undefined ? newDeployed : undefined,
+    standby,
+    lead: values["Lead foreman"] || values["Lead"],
+    projects: values["Projects"],
+  };
+
+  Object.keys(dbData).forEach(key => {
+    if (dbData[key] === undefined) {
+      delete dbData[key];
+    }
+  });
+
+  const { error } = await supabase.from("manpower").update(dbData).eq("id", id);
+  if (error) {
+    console.error("Error updating manpower:", error);
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/manpower");
+  return { success: true };
+}
+
+export async function deleteManpower(id) {
+  const supabase = getClient();
+  const { error } = await supabase.from("manpower").delete().eq("id", id);
+  if (error) {
+    console.error("Error deleting manpower:", error);
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/manpower");
+  return { success: true };
+}
+
+

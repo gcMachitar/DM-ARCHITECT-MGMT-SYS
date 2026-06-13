@@ -4,15 +4,20 @@ import {
   PageHeader,
   Panel,
   PrimaryButton,
+  SecondaryButton,
   ProgressBar,
   StatCard,
   StatusPill,
 } from "../_components/ui";
+import { DeleteButton } from "../_components/delete-button";
+import { deleteManpower } from "../actions";
 
 export default async function ManpowerPage() {
   const supabase = getSupabaseAdmin();
   const { data: dbManpower } = await supabase.from("manpower").select("*");
-  const manpower = dbManpower && dbManpower.length > 0 ? dbManpower : mockManpower;
+  const manpower = dbManpower && dbManpower.length > 0
+    ? dbManpower
+    : mockManpower.map((m, index) => ({ id: `mock-${index}`, ...m }));
 
   const { data: dbProjects } = await supabase.from("projects").select("*");
   const projects = dbProjects && dbProjects.length > 0
@@ -36,14 +41,19 @@ export default async function ManpowerPage() {
       }))
     : mockProjects;
 
-  const deployed = manpower.reduce((sum, group) => sum + group.deployed, 0);
-  const standby = manpower.reduce((sum, group) => sum + group.standby, 0);
+  const deployed = manpower.reduce((sum, group) => sum + (group.deployed || 0), 0);
+  const standby = manpower.reduce((sum, group) => sum + (group.standby || 0), 0);
 
 
   return (
     <main>
       <PageHeader
-        action={<PrimaryButton action="assign-crew">Assign crew</PrimaryButton>}
+        action={
+          <div className="flex gap-2">
+            <SecondaryButton action="add-manpower">Add trade group</SecondaryButton>
+            <PrimaryButton action="assign-crew">Assign crew</PrimaryButton>
+          </div>
+        }
         eyebrow="Manpower and foremen"
         title="Know exactly how many men are assigned, who leads them, and where each crew is needed."
       >
@@ -64,7 +74,7 @@ export default async function ManpowerPage() {
               {manpower.map((group) => (
                 <div
                   className="rounded-lg border border-lime-900/10 bg-[#f8fcf1] p-4"
-                  key={group.trade}
+                  key={group.id || group.trade}
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
@@ -86,7 +96,29 @@ export default async function ManpowerPage() {
                       </span>
                       <span className="text-olive-700">{group.total} total</span>
                     </div>
-                    <ProgressBar value={(group.deployed / group.total) * 100} />
+                    <ProgressBar value={group.total > 0 ? (group.deployed / group.total) * 100 : 0} />
+                  </div>
+                  
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-lime-900/5 pt-3">
+                    <SecondaryButton
+                      action="edit-manpower"
+                      targetId={group.id}
+                      initialValues={{
+                        "Trade": group.trade,
+                        "Total": group.total,
+                        "Deployed": group.deployed,
+                        "Lead foreman": group.lead,
+                        "Projects": group.projects,
+                      }}
+                      className="rounded-md border border-lime-700/25 bg-white/70 px-3 py-1.5 text-xs font-bold text-olive-800 transition hover:bg-lime-50"
+                    >
+                      Edit
+                    </SecondaryButton>
+                    <DeleteButton
+                      id={group.id}
+                      onDelete={deleteManpower}
+                      confirmMessage={`Are you sure you want to delete the ${group.trade} crew?`}
+                    />
                   </div>
                 </div>
               ))}

@@ -8,6 +8,9 @@ import {
   SecondaryButton,
   StatusPill,
 } from "../_components/ui";
+import { ActionButton } from "../_components/action-modal";
+import { DeleteButton } from "../_components/delete-button";
+import { deleteProject } from "../actions";
 
 export default async function ProjectsPage() {
   const supabase = getSupabaseAdmin();
@@ -63,6 +66,7 @@ export default async function ProjectsPage() {
                   <th className="px-4 py-3">Progress</th>
                   <th className="px-4 py-3">Risk</th>
                   <th className="px-4 py-3">Due</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-lime-900/10 bg-white">
@@ -121,6 +125,39 @@ export default async function ProjectsPage() {
                     <td className="px-4 py-4 text-sm">
                       <p className="font-bold text-olive-950">{project.due}</p>
                       <p className="text-olive-700">{project.status}</p>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <ActionButton
+                          action="edit-project"
+                          variant="secondary"
+                          targetId={project.slug}
+                          initialValues={{
+                            "Project name": project.name,
+                            "Client": project.client,
+                            "Location": project.location,
+                            "Phase": project.phase,
+                            "Foreman": project.foreman,
+                            "Site engineer": project.siteEngineer,
+                            "Architect": project.architect,
+                            "Crew count": project.crew,
+                            "Budget": project.budget,
+                            "Spent": project.spent,
+                            "Progress": project.progress,
+                            "Due date": project.due,
+                            "Status": project.status,
+                            "Next milestone": project.nextMilestone,
+                            "Risk": project.risk,
+                          }}
+                        >
+                          Edit
+                        </ActionButton>
+                        <DeleteButton
+                          id={project.slug}
+                          onDelete={deleteProject}
+                          confirmMessage={`Are you sure you want to delete project "${project.name}"?`}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}

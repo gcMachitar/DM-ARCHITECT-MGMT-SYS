@@ -14,6 +14,10 @@ import {
   approvePayroll,
   assignSelectedRequests,
   submitDailyReport,
+  updateProject,
+  updateEmployee,
+  createManpower,
+  updateManpower,
 } from "../actions";
 
 const actionSubmitters = {
@@ -28,9 +32,25 @@ const actionSubmitters = {
   "add-payroll-employee": addPayrollEmployee,
   "record-ca": recordCashAdvance,
   "approve-payroll": approvePayroll,
+  "edit-project": updateProject,
+  "edit-employee": updateEmployee,
+  "add-manpower": createManpower,
+  "edit-manpower": updateManpower,
 };
 
 const actionCopy = {
+  "add-manpower": {
+    title: "Add Manpower Group",
+    description: "Create a new trade, define total count, lead foreman, and active projects.",
+    fields: ["Trade", "Total", "Deployed", "Lead foreman", "Projects"],
+    result: "Manpower group added.",
+  },
+  "edit-manpower": {
+    title: "Edit Manpower Group",
+    description: "Update trade details, total headcount, deployed count, lead foreman, and active projects.",
+    fields: ["Trade", "Total", "Deployed", "Lead foreman", "Projects"],
+    result: "Manpower group updated.",
+  },
   "daily-report": {
     title: "Daily Site Report",
     description:
@@ -44,6 +64,49 @@ const actionCopy = {
       "Start a job file with client details, project scope, location, budget, and responsible team.",
     fields: ["Project name", "Client", "Location"],
     result: "Project intake draft created.",
+  },
+  "edit-project": {
+    title: "Edit Project Details",
+    description:
+      "Update project metadata, scope, team assignments, progress, and financial information.",
+    fields: [
+      "Project name",
+      "Client",
+      "Location",
+      "Phase",
+      "Foreman",
+      "Site engineer",
+      "Architect",
+      "Crew count",
+      "Budget",
+      "Spent",
+      "Progress",
+      "Due date",
+      "Status",
+      "Next milestone",
+      "Risk",
+    ],
+    result: "Project details updated.",
+  },
+  "edit-employee": {
+    title: "Edit Employee Details",
+    description:
+      "Update employee assignment, rate, role, days worked, overtime, deductions, and payment methods.",
+    fields: [
+      "Employee name",
+      "Role",
+      "Project / department",
+      "Daily rate",
+      "Days worked",
+      "Overtime",
+      "Deductions",
+      "Cash advance",
+      "CA balance",
+      "Release method",
+      "Receipt status",
+      "Status",
+    ],
+    result: "Employee details updated.",
   },
   "work-order": {
     title: "Create Work Order",
@@ -160,13 +223,17 @@ export function ActionButton({
   className,
   href,
   variant = "primary",
+  targetId,
+  initialValues,
 }) {
   const modalId = useId();
   const [open, setOpen] = useState(false);
-  const [values, setValues] = useState({});
+  const [values, setValues] = useState(initialValues || {});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const copy = actionCopy[action] || actionCopy["work-order"];
-  const hasValues = Object.values(values).some((value) => value.trim());
+  const hasValues = Object.values(values).some(
+    (value) => value !== undefined && value !== null && String(value).trim() !== ""
+  );
   const baseClass =
     variant === "secondary"
       ? "rounded-md border border-lime-700/25 bg-white/70 px-3 py-2 text-sm font-bold text-olive-800 transition hover:bg-lime-50"
@@ -182,7 +249,11 @@ export function ActionButton({
     try {
       const submitter = actionSubmitters[action];
       if (submitter) {
-        await submitter(values);
+        if (targetId) {
+          await submitter(targetId, values);
+        } else {
+          await submitter(values);
+        }
       }
     } catch (err) {
       console.error("Action submission failed:", err);
@@ -377,7 +448,7 @@ export function ActionButton({
           window.dispatchEvent(
             new CustomEvent("dm-action-open", { detail: modalId }),
           );
-          setValues({});
+          setValues(initialValues || {});
           setOpen(true);
         }}
         type="button"

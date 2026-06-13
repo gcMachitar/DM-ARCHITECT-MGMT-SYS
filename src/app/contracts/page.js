@@ -8,13 +8,16 @@ import {
   StatCard,
   StatusPill,
 } from "../_components/ui";
+import { DeleteButton } from "../_components/delete-button";
+import { StatusDropdown } from "../_components/status-dropdown";
+import { deleteContract, updateContract } from "../actions";
 
 export default async function ContractsPage() {
   const supabase = getSupabaseAdmin();
   const { data: dbContracts } = await supabase.from("contracts").select("*");
   const contractItems = dbContracts && dbContracts.length > 0
-    ? dbContracts.map(c => [c.item, c.project, c.amount, c.status, c.owner])
-    : mockContractItems;
+    ? dbContracts.map(c => ({ id: c.id, item: c.item, project: c.project, amount: c.amount, status: c.status, owner: c.owner }))
+    : mockContractItems.map(([item, project, amount, status, owner], index) => ({ id: `mock-${index}`, item, project, amount, status, owner }));
 
   const { data: dbProjects } = await supabase.from("projects").select("*");
   const projects = dbProjects && dbProjects.length > 0
@@ -71,27 +74,38 @@ export default async function ContractsPage() {
                     <th className="px-4 py-3">Amount</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Owner</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-lime-900/10 bg-white">
-                  {contractItems.map(([item, project, amount, status, owner], index) => (
-                    <tr key={item}>
+                  {contractItems.map((c, index) => (
+                    <tr key={c.id || c.item}>
                       <td className="px-4 py-4 font-black text-olive-950">
-                        {item}
+                        {c.item}
                       </td>
                       <td className="px-4 py-4 text-sm text-olive-700">
-                        {project}
+                        {c.project}
                       </td>
                       <td className="px-4 py-4 text-sm font-black text-olive-950">
-                        {amount}
+                        {c.amount}
                       </td>
                       <td className="px-4 py-4">
-                        <StatusPill tone={status === "Client review" || index === 1 ? "warn" : "neutral"}>
-                          {status}
-                        </StatusPill>
+                        <StatusDropdown
+                          id={c.id}
+                          currentValue={c.status}
+                          options={["Drafting", "Client review", "For approval", "Accounting"]}
+                          onUpdate={updateContract}
+                        />
                       </td>
                       <td className="px-4 py-4 text-sm font-bold text-olive-800">
-                        {owner || (index % 2 === 0 ? "Accounting" : "Management")}
+                        {c.owner || (index % 2 === 0 ? "Accounting" : "Management")}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-right">
+                        <DeleteButton
+                          id={c.id}
+                          onDelete={deleteContract}
+                          confirmMessage={`Are you sure you want to delete billing item "${c.item}"?`}
+                        />
                       </td>
                     </tr>
                   ))}

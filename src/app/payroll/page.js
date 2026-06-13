@@ -8,6 +8,9 @@ import {
   StatCard,
   StatusPill,
 } from "../_components/ui";
+import { ActionButton } from "../_components/action-modal";
+import { DeleteButton } from "../_components/delete-button";
+import { deleteEmployee } from "../actions";
 
 const payrollPeriod = {
   label: "May 16-31, 2026",
@@ -138,6 +141,7 @@ export default async function PayrollPage() {
   const { data: dbEmployees } = await supabase.from("employees").select("*");
   const employees = dbEmployees && dbEmployees.length > 0
     ? dbEmployees.map(e => ({
+        id: e.id,
         name: e.name,
         role: e.role,
         project: e.project,
@@ -151,7 +155,7 @@ export default async function PayrollPage() {
         receiptStatus: e.receipt_status,
         status: e.status,
       }))
-    : mockEmployees;
+    : mockEmployees.map((e, index) => ({ ...e, id: `mock-${index}` }));
 
   const grossTotal = employees.reduce((sum, employee) => sum + grossPay(employee), 0);
   const caDeducted = employees.reduce((sum, employee) => sum + employee.cashAdvance, 0);
@@ -326,9 +330,34 @@ export default async function PayrollPage() {
                         </StatusPill>
                       </td>
                       <td className="border-b border-lime-900/10 p-3 text-right">
-                        <SecondaryButton action="generate-payslip">
-                          Receipt
-                        </SecondaryButton>
+                        <div className="flex items-center justify-end gap-2">
+                          <ActionButton
+                            action="edit-employee"
+                            variant="secondary"
+                            targetId={employee.id}
+                            initialValues={{
+                              "Employee name": employee.name,
+                              "Role": employee.role,
+                              "Project / department": employee.project,
+                              "Daily rate": employee.rate,
+                              "Days worked": employee.days,
+                              "Overtime": employee.overtime,
+                              "Deductions": employee.deductions,
+                              "Cash advance": employee.cashAdvance,
+                              "CA balance": employee.caBalance,
+                              "Release method": employee.releaseMethod,
+                              "Receipt status": employee.receiptStatus,
+                              "Status": employee.status,
+                            }}
+                          >
+                            Edit
+                          </ActionButton>
+                          <DeleteButton
+                            id={employee.id}
+                            onDelete={deleteEmployee}
+                            confirmMessage={`Are you sure you want to delete employee "${employee.name}"?`}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}
