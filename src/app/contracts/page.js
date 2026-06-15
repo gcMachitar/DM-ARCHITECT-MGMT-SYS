@@ -11,16 +11,24 @@ import {
 import { DeleteButton } from "../_components/delete-button";
 import { StatusDropdown } from "../_components/status-dropdown";
 import { deleteContract, updateContract } from "../actions";
+import { ProjectFilter } from "../_components/project-filter";
 
-export default async function ContractsPage() {
+export default async function ContractsPage(props) {
+  const searchParams = await props.searchParams;
+  const currentProjectName = searchParams?.project || "";
+
   const supabase = getSupabaseAdmin();
-  const { data: dbContracts } = await supabase.from("contracts").select("*");
-  const contractItems = dbContracts && dbContracts.length > 0
+  const { data: dbContracts } = await supabase.from("contracts").select("*").order("id", { ascending: true });
+  const allContractItems = dbContracts && dbContracts.length > 0
     ? dbContracts.map(c => ({ id: c.id, item: c.item, project: c.project, amount: c.amount, status: c.status, owner: c.owner }))
     : mockContractItems.map(([item, project, amount, status, owner], index) => ({ id: `mock-${index}`, item, project, amount, status, owner }));
 
-  const { data: dbProjects } = await supabase.from("projects").select("*");
-  const projects = dbProjects && dbProjects.length > 0
+  const contractItems = currentProjectName
+    ? allContractItems.filter(c => c.project === currentProjectName)
+    : allContractItems;
+
+  const { data: dbProjects } = await supabase.from("projects").select("*").order("id", { ascending: true });
+  const allProjects = dbProjects && dbProjects.length > 0
     ? dbProjects.map(p => ({
         slug: p.slug,
         name: p.name,
@@ -40,10 +48,20 @@ export default async function ContractsPage() {
         risk: p.risk,
       }))
     : mockProjects;
+
+  const projects = currentProjectName
+    ? allProjects.filter(p => p.name === currentProjectName)
+    : allProjects;
+
   return (
     <main>
       <PageHeader
-        action={<PrimaryButton action="new-billing">New billing</PrimaryButton>}
+        action={
+          <div className="flex gap-2 items-center">
+            <ProjectFilter projects={allProjects} />
+            <PrimaryButton action="new-billing">New billing</PrimaryButton>
+          </div>
+        }
         eyebrow="Construction and contract control"
         title="Track billings, change orders, supplier commitments, and project cost movement."
       >

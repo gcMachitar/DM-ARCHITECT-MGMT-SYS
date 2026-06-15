@@ -1,5 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "./_components/app-shell";
+import { SyncStatus } from "./_components/sync-status";
+import { Toast } from "./_components/toast";
+import { ConfirmModal } from "./_components/confirm-modal";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,6 +29,9 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full bg-[#edf7e4] text-olive-950">
         <AppShell>{children}</AppShell>
+        <SyncStatus />
+        <Toast />
+        <ConfirmModal />
       </body>
     </html>
   );

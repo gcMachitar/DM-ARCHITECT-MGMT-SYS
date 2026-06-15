@@ -35,7 +35,7 @@ export default async function OverviewPage() {
   const supabase = getSupabaseAdmin();
 
   // Fetch from Supabase with safe error handling and fallback
-  const { data: dbProjects } = await supabase.from("projects").select("*");
+  const { data: dbProjects } = await supabase.from("projects").select("*").order("id", { ascending: true });
   const projects = dbProjects && dbProjects.length > 0
     ? dbProjects.map(p => ({
         slug: p.slug,
@@ -57,17 +57,17 @@ export default async function OverviewPage() {
       }))
     : mockProjects;
 
-  const { data: dbSchedules } = await supabase.from("schedules").select("*");
+  const { data: dbSchedules } = await supabase.from("schedules").select("*").order("id", { ascending: true });
   const schedule = dbSchedules && dbSchedules.length > 0
     ? dbSchedules.map(s => [s.time, s.item, s.place])
     : mockSchedule;
 
-  const { data: dbRequests } = await supabase.from("service_requests").select("*");
+  const { data: dbRequests } = await supabase.from("service_requests").select("*").order("id", { ascending: true });
   const serviceRequests = dbRequests && dbRequests.length > 0
     ? dbRequests.map(r => [r.task, r.project, r.owner, r.due, r.stage])
     : mockServiceRequests;
 
-  const { data: dbContracts } = await supabase.from("contracts").select("*");
+  const { data: dbContracts } = await supabase.from("contracts").select("*").order("id", { ascending: true });
   const contractItems = dbContracts && dbContracts.length > 0
     ? dbContracts.map(c => [c.item, c.project, c.amount, c.status])
     : mockContractItems;

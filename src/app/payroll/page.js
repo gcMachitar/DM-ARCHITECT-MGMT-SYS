@@ -138,7 +138,7 @@ function receiptTone(status) {
 
 export default async function PayrollPage() {
   const supabase = getSupabaseAdmin();
-  const { data: dbEmployees } = await supabase.from("employees").select("*");
+  const { data: dbEmployees } = await supabase.from("employees").select("*").order("id", { ascending: true });
   const employees = dbEmployees && dbEmployees.length > 0
     ? dbEmployees.map(e => ({
         id: e.id,

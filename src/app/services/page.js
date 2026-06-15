@@ -11,6 +11,7 @@ import {
 import { DeleteButton } from "../_components/delete-button";
 import { StatusDropdown } from "../_components/status-dropdown";
 import { deleteServiceRequest, updateServiceRequest } from "../actions";
+import { ProjectFilter } from "../_components/project-filter";
 
 const serviceLines = [
   ["Architectural Design", "Concepts, schematic plans, design development, and permit sets.", "4 scopes"],
@@ -19,16 +20,34 @@ const serviceLines = [
   ["Interior Fit-Out", "Finish boards, joinery, ceiling, lighting, and turnover punch lists.", "3 scopes"],
 ];
 
-export default async function ServicesPage() {
+export default async function ServicesPage(props) {
+  const searchParams = await props.searchParams;
+  const currentProjectName = searchParams?.project || "";
+
   const supabase = getSupabaseAdmin();
-  const { data: dbRequests } = await supabase.from("service_requests").select("*");
-  const serviceRequests = dbRequests && dbRequests.length > 0
+  const { data: dbRequests } = await supabase.from("service_requests").select("*").order("id", { ascending: true });
+  const allServiceRequests = dbRequests && dbRequests.length > 0
     ? dbRequests.map(r => ({ id: r.id, task: r.task, project: r.project, owner: r.owner, due: r.due, stage: r.stage }))
     : mockServiceRequests.map(([task, project, owner, due, stage], index) => ({ id: `mock-${index}`, task, project, owner, due, stage }));
+
+  const serviceRequests = currentProjectName
+    ? allServiceRequests.filter(r => r.project === currentProjectName)
+    : allServiceRequests;
+
+  const { data: dbProjects } = await supabase.from("projects").select("*").order("id", { ascending: true });
+  const allProjects = dbProjects && dbProjects.length > 0
+    ? dbProjects.map(p => ({ slug: p.slug, name: p.name }))
+    : [];
+
   return (
     <main>
       <PageHeader
-        action={<PrimaryButton action="log-request">Log request</PrimaryButton>}
+        action={
+          <div className="flex gap-2 items-center">
+            <ProjectFilter projects={allProjects} />
+            <PrimaryButton action="log-request">Log request</PrimaryButton>
+          </div>
+        }
         eyebrow="Services and requests"
         title="A service desk for the architecture office and the construction field team."
       >
@@ -96,9 +115,16 @@ export default async function ServicesPage() {
                         {r.owner}
                       </td>
                       <td className="px-4 py-4">
-                        <StatusPill tone={r.due === "Today" ? "warn" : "neutral"}>
-                          {r.due}
-                        </StatusPill>
+                        {(() => {
+                          const isDate = !isNaN(Date.parse(r.due));
+                          const isOverdue = isDate && new Date(r.due) < new Date(new Date().setHours(0,0,0,0));
+                          const tone = isOverdue ? "danger" : r.due === "Today" ? "warn" : "neutral";
+                          return (
+                            <StatusPill tone={tone}>
+                              {isOverdue ? "Overdue" : r.due}
+                            </StatusPill>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-4 text-sm">
                         <StatusDropdown

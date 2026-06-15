@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
+import Link from "next/link";
 import { projects as mockProjects } from "../data";
 import {
   PageHeader,
@@ -14,7 +15,7 @@ import { deleteProject } from "../actions";
 
 export default async function ProjectsPage() {
   const supabase = getSupabaseAdmin();
-  const { data: dbProjects } = await supabase.from("projects").select("*");
+  const { data: dbProjects } = await supabase.from("projects").select("*").order("id", { ascending: true });
   
   const projects = dbProjects && dbProjects.length > 0
     ? dbProjects.map(p => ({
@@ -74,7 +75,9 @@ export default async function ProjectsPage() {
                   <tr key={project.slug}>
                     <td className="px-4 py-4">
                       <p className="font-black text-olive-950">
-                        {project.name}
+                        <Link href={`/projects/${project.slug}`} className="hover:underline text-lime-700 hover:text-lime-800">
+                          {project.name}
+                        </Link>
                       </p>
                       <p className="text-sm text-olive-700">
                         {project.client} / {project.location}

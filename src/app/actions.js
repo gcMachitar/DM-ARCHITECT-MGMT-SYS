@@ -39,7 +39,7 @@ export async function createProject(values) {
 
   revalidatePath("/");
   revalidatePath("/projects");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function createWorkOrder(values) {
@@ -63,7 +63,7 @@ export async function createWorkOrder(values) {
 
   revalidatePath("/");
   revalidatePath("/services");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function assignCrew(values) {
@@ -112,19 +112,34 @@ export async function assignCrew(values) {
   revalidatePath("/");
   revalidatePath("/projects");
   revalidatePath("/manpower");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
+}
+
+function parseCurrency(str) {
+  if (!str) return 0;
+  let val = String(str).replace(/[^0-9.MKk]/g, '').toUpperCase();
+  let mult = 1;
+  if (val.includes('M')) { mult = 1000000; val = val.replace('M', ''); }
+  else if (val.includes('K')) { mult = 1000; val = val.replace('K', ''); }
+  return parseFloat(val || 0) * mult;
+}
+
+function formatCurrency(num) {
+  if (num >= 1000000) return 'PHP ' + (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (num >= 1000) return 'PHP ' + (num / 1000).toFixed(0) + 'K';
+  return 'PHP ' + num;
 }
 
 export async function createBilling(values) {
   const supabase = getClient();
   const project = values["Project"] || "General";
   const item = values["Billing description"] || "Progress Billing";
-  const amount = values["Amount"] || "PHP 0";
+  const amountStr = values["Amount"] || "PHP 0";
 
   const { error } = await supabase.from("contracts").insert({
     item,
     project,
-    amount,
+    amount: amountStr,
     status: "For approval",
     owner: "Management",
   });
@@ -134,9 +149,21 @@ export async function createBilling(values) {
     throw new Error(error.message);
   }
 
+  // Update project spent metric
+  if (project !== "General") {
+    const { data: projData } = await supabase.from("projects").select("spent").eq("name", project).single();
+    if (projData) {
+      const currentSpent = parseCurrency(projData.spent);
+      const addedAmount = parseCurrency(amountStr);
+      const newSpent = formatCurrency(currentSpent + addedAmount);
+      await supabase.from("projects").update({ spent: newSpent }).eq("name", project);
+    }
+  }
+
   revalidatePath("/");
   revalidatePath("/contracts");
-  return { success: true };
+  revalidatePath("/projects");
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function logRequest(values) {
@@ -160,7 +187,7 @@ export async function logRequest(values) {
 
   revalidatePath("/");
   revalidatePath("/services");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function addPayrollEmployee(values) {
@@ -191,7 +218,7 @@ export async function addPayrollEmployee(values) {
   }
 
   revalidatePath("/payroll");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function recordCashAdvance(values) {
@@ -222,7 +249,7 @@ export async function recordCashAdvance(values) {
   }
 
   revalidatePath("/payroll");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function approvePayroll(values) {
@@ -239,7 +266,7 @@ export async function approvePayroll(values) {
   }
 
   revalidatePath("/payroll");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function assignSelectedRequests(values) {
@@ -264,7 +291,7 @@ export async function assignSelectedRequests(values) {
 
   revalidatePath("/");
   revalidatePath("/services");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function submitDailyReport(values) {
@@ -291,7 +318,7 @@ export async function submitDailyReport(values) {
 
   revalidatePath("/");
   revalidatePath("/services");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function login(values) {
@@ -314,7 +341,7 @@ export async function login(values) {
     sameSite: "lax",
   });
 
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function logout() {
@@ -329,15 +356,25 @@ export async function logout() {
 
 export async function deleteProject(slug) {
   const supabase = getClient();
+  const { data: project } = await supabase.from("projects").select("name").eq("slug", slug).single();
+
   const { error } = await supabase.from("projects").delete().eq("slug", slug);
   if (error) {
     console.error("Error deleting project:", error);
     throw new Error(error.message);
   }
+
+  if (project) {
+    await supabase.from("contracts").delete().eq("project", project.name);
+    await supabase.from("service_requests").delete().eq("project", project.name);
+  }
+
   revalidatePath("/");
   revalidatePath("/projects");
   revalidatePath("/manpower");
-  return { success: true };
+  revalidatePath("/contracts");
+  revalidatePath("/services");
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function updateProject(slug, values) {
@@ -377,7 +414,7 @@ export async function updateProject(slug, values) {
   revalidatePath("/");
   revalidatePath("/projects");
   revalidatePath("/manpower");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function deleteContract(id) {
@@ -389,7 +426,7 @@ export async function deleteContract(id) {
   }
   revalidatePath("/");
   revalidatePath("/contracts");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function updateContract(id, values) {
@@ -416,7 +453,7 @@ export async function updateContract(id, values) {
   }
   revalidatePath("/");
   revalidatePath("/contracts");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function deleteServiceRequest(id) {
@@ -428,7 +465,7 @@ export async function deleteServiceRequest(id) {
   }
   revalidatePath("/");
   revalidatePath("/services");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function updateServiceRequest(id, values) {
@@ -455,7 +492,7 @@ export async function updateServiceRequest(id, values) {
   }
   revalidatePath("/");
   revalidatePath("/services");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function deleteEmployee(id) {
@@ -466,7 +503,7 @@ export async function deleteEmployee(id) {
     throw new Error(error.message);
   }
   revalidatePath("/payroll");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function updateEmployee(id, values) {
@@ -498,7 +535,7 @@ export async function updateEmployee(id, values) {
     throw new Error(error.message);
   }
   revalidatePath("/payroll");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function createManpower(values) {
@@ -526,7 +563,7 @@ export async function createManpower(values) {
 
   revalidatePath("/");
   revalidatePath("/manpower");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function updateManpower(id, values) {
@@ -559,7 +596,7 @@ export async function updateManpower(id, values) {
 
   revalidatePath("/");
   revalidatePath("/manpower");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 export async function deleteManpower(id) {
@@ -572,7 +609,7 @@ export async function deleteManpower(id) {
 
   revalidatePath("/");
   revalidatePath("/manpower");
-  return { success: true };
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
 

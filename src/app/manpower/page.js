@@ -11,16 +11,21 @@ import {
 } from "../_components/ui";
 import { DeleteButton } from "../_components/delete-button";
 import { deleteManpower } from "../actions";
+import { ProjectFilter } from "../_components/project-filter";
+import { ActionButton } from "../_components/action-modal";
 
-export default async function ManpowerPage() {
+export default async function ManpowerPage(props) {
+  const searchParams = await props.searchParams;
+  const currentProjectName = searchParams?.project || "";
+  
   const supabase = getSupabaseAdmin();
-  const { data: dbManpower } = await supabase.from("manpower").select("*");
+  const { data: dbManpower } = await supabase.from("manpower").select("*").order("id", { ascending: true });
   const manpower = dbManpower && dbManpower.length > 0
     ? dbManpower
     : mockManpower.map((m, index) => ({ id: `mock-${index}`, ...m }));
 
-  const { data: dbProjects } = await supabase.from("projects").select("*");
-  const projects = dbProjects && dbProjects.length > 0
+  const { data: dbProjects } = await supabase.from("projects").select("*").order("id", { ascending: true });
+  const allProjects = dbProjects && dbProjects.length > 0
     ? dbProjects.map(p => ({
         slug: p.slug,
         name: p.name,
@@ -41,15 +46,19 @@ export default async function ManpowerPage() {
       }))
     : mockProjects;
 
+  const projects = currentProjectName 
+    ? allProjects.filter(p => p.name === currentProjectName)
+    : allProjects;
+
   const deployed = manpower.reduce((sum, group) => sum + (group.deployed || 0), 0);
   const standby = manpower.reduce((sum, group) => sum + (group.standby || 0), 0);
-
 
   return (
     <main>
       <PageHeader
         action={
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <ProjectFilter projects={allProjects} />
             <SecondaryButton action="add-manpower">Add trade group</SecondaryButton>
             <PrimaryButton action="assign-crew">Assign crew</PrimaryButton>
           </div>
@@ -68,10 +77,11 @@ export default async function ManpowerPage() {
           <StatCard label="Foremen active" note="Site accountability" value="4" tone="dark" />
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-          <Panel subtitle="Trade availability and site load." title="Crew Allocation">
-            <div className="space-y-4">
-              {manpower.map((group) => (
+        <section className={`grid gap-6 ${currentProjectName ? 'xl:grid-cols-1' : 'xl:grid-cols-[0.9fr_1.1fr]'}`}>
+          {!currentProjectName && (
+            <Panel subtitle="Trade availability and site load." title="Crew Allocation">
+              <div className="space-y-4">
+                {manpower.map((group) => (
                 <div
                   className="rounded-lg border border-lime-900/10 bg-[#f8fcf1] p-4"
                   key={group.id || group.trade}
@@ -120,10 +130,11 @@ export default async function ManpowerPage() {
                       confirmMessage={`Are you sure you want to delete the ${group.trade} crew?`}
                     />
                   </div>
-                </div>
-              ))}
-            </div>
-          </Panel>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          )}
 
           <Panel subtitle="Manpower per project and responsible field lead." title="Site Deployment Board">
             <div className="grid gap-4 md:grid-cols-2">
@@ -165,6 +176,32 @@ export default async function ManpowerPage() {
                       </dd>
                     </div>
                   </dl>
+                  <div className="mt-4 border-t border-lime-900/5 pt-3">
+                    <ActionButton
+                      action="edit-project"
+                      targetId={project.slug}
+                      initialValues={{
+                        "Project name": project.name,
+                        "Client": project.client,
+                        "Location": project.location,
+                        "Phase": project.phase,
+                        "Foreman": project.foreman,
+                        "Site engineer": project.siteEngineer,
+                        "Architect": project.architect,
+                        "Crew count": project.crew,
+                        "Budget": project.budget,
+                        "Spent": project.spent,
+                        "Progress": project.progress,
+                        "Due date": project.due,
+                        "Status": project.status,
+                        "Next milestone": project.nextMilestone,
+                        "Risk": project.risk,
+                      }}
+                      variant="secondary"
+                    >
+                      Edit project manpower
+                    </ActionButton>
+                  </div>
                 </article>
               ))}
             </div>

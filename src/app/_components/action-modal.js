@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
+import { customConfirm } from "./confirm-modal";
 import {
   createProject,
   createWorkOrder,
@@ -231,33 +232,49 @@ export function ActionButton({
   const [values, setValues] = useState(initialValues || {});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const copy = actionCopy[action] || actionCopy["work-order"];
-  const hasValues = Object.values(values).some(
-    (value) => value !== undefined && value !== null && String(value).trim() !== ""
-  );
-  const baseClass =
-    variant === "secondary"
-      ? "rounded-md border border-lime-700/25 bg-white/70 px-3 py-2 text-sm font-bold text-olive-800 transition hover:bg-lime-50"
-      : "rounded-md bg-olive-900 px-4 py-2 text-sm font-bold text-lime-50 shadow-sm shadow-lime-900/20 transition hover:bg-[#1b3013]";
+  const hasValues = Object.keys(values).length > 0;
 
   function closeModal() {
     setOpen(false);
     setValues({});
   }
 
+  async function handleClose() {
+    if (hasValues && !isSubmitting) {
+      if (await customConfirm("You have unsaved changes. Discard?")) {
+        closeModal();
+      }
+    } else {
+      closeModal();
+    }
+  }
+  const baseClass =
+    variant === "secondary"
+      ? "rounded-md border border-lime-700/25 bg-white/70 px-3 py-2 text-sm font-bold text-olive-800 transition hover:bg-lime-50"
+      : "rounded-md bg-olive-900 px-4 py-2 text-sm font-bold text-lime-50 shadow-sm shadow-lime-900/20 transition hover:bg-[#1b3013]";
+
   async function saveDraft() {
     setIsSubmitting(true);
+    window.dispatchEvent(new CustomEvent("dm-sync-start"));
     try {
       const submitter = actionSubmitters[action];
       if (submitter) {
+        let result;
         if (targetId) {
-          await submitter(targetId, values);
+          result = await submitter(targetId, values);
         } else {
-          await submitter(values);
+          result = await submitter(values);
+        }
+        if (result && result.timestamp) {
+          window.dispatchEvent(new CustomEvent("dm-sync-success", { detail: result }));
         }
       }
     } catch (err) {
       console.error("Action submission failed:", err);
-      alert("Failed to save action: " + err.message);
+      window.dispatchEvent(new CustomEvent("dm-toast", {
+        detail: { message: "Failed to save action: " + err.message, type: "error" }
+      }));
+      window.dispatchEvent(new CustomEvent("dm-sync-error"));
       setIsSubmitting(false);
       return;
     }
@@ -325,7 +342,7 @@ export function ActionButton({
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
-        closeModal();
+        handleClose();
       }
     }
 
@@ -346,7 +363,7 @@ export function ActionButton({
       className="fixed inset-0 z-[9999] grid place-items-center bg-olive-950/45 p-4 backdrop-blur-sm"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
-          closeModal();
+          handleClose();
         }
       }}
       role="presentation"
@@ -372,7 +389,7 @@ export function ActionButton({
             <button
               aria-label="Cancel action"
               className="rounded-md border border-lime-700/25 bg-white px-3 py-2 text-sm font-black text-olive-800 transition hover:bg-lime-50"
-              onClick={closeModal}
+              onClick={handleClose}
               type="button"
             >
               Cancel
@@ -387,17 +404,54 @@ export function ActionButton({
                 <span className="text-xs font-bold uppercase tracking-wide text-olive-700">
                   {field}
                 </span>
-                <input
-                  className="mt-1 w-full rounded-md border border-lime-700/20 bg-white px-3 py-2.5 text-sm text-olive-950 outline-none focus:border-lime-600"
-                  onChange={(event) =>
-                    setValues((current) => ({
-                      ...current,
-                      [field]: event.target.value,
-                    }))
-                  }
-                  placeholder={`Enter ${field.toLowerCase()}`}
-                  value={values[field] || ""}
-                />
+                {(() => {
+                  const isCurrency = ["Amount", "Budget", "Spent", "CA amount", "Deduct per payroll"].includes(field);
+                  const isNumber = ["Crew count", "Total", "Deployed", "Standby", "Progress", "Number of men", "Days worked", "Daily rate", "Overtime", "Cash advance", "CA balance", "Deductions"].includes(field);
+                  const isDate = ["Due date", "Target start", "Due"].includes(field);
+                  
+                  let type = "text";
+                  if (isNumber) type = "number";
+                  if (isDate) type = "date";
+
+                  let placeholder = `Enter ${field.toLowerCase()}`;
+                  if (isCurrency) placeholder = "e.g., 1.5M or 500K";
+
+                  const handleBlur = (e) => {
+                    let val = e.target.value;
+                    if (isCurrency && val) {
+                      // Basic auto-formatter for currency if they just type numbers
+                      if (/^\d+$/.test(val)) {
+                        const num = parseInt(val, 10);
+                        if (num >= 1000000) val = (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+                        else if (num >= 1000) val = (num / 1000).toFixed(0) + 'K';
+                        else val = String(num);
+                        setValues((prev) => ({ ...prev, [field]: 'PHP ' + val }));
+                      } else if (!val.toUpperCase().startsWith('PHP ')) {
+                        // Just ensure PHP prefix if they didn't add it
+                        setValues((prev) => ({ ...prev, [field]: 'PHP ' + val.toUpperCase() }));
+                      }
+                    }
+                  };
+
+                  return (
+                    <input
+                      type={type}
+                      min={isNumber ? "0" : undefined}
+                      max={field === "Progress" ? "100" : undefined}
+                      className="mt-1 w-full rounded-md border border-lime-700/20 bg-white px-3 py-2.5 text-sm text-olive-950 outline-none focus:border-lime-600 focus:ring-1 focus:ring-lime-600 invalid:border-red-500 invalid:text-red-600"
+                      onChange={(event) =>
+                        setValues((current) => ({
+                          ...current,
+                          [field]: event.target.value,
+                        }))
+                      }
+                      onBlur={handleBlur}
+                      placeholder={placeholder}
+                      value={values[field] || ""}
+                      required
+                    />
+                  );
+                })()}
               </label>
             ))}
           </div>
@@ -412,7 +466,7 @@ export function ActionButton({
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button
               className="rounded-md border border-lime-700/25 bg-white px-4 py-2 text-sm font-bold text-olive-800"
-              onClick={closeModal}
+              onClick={handleClose}
               type="button"
             >
               Cancel

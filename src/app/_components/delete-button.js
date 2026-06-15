@@ -1,17 +1,20 @@
 "use client";
 
 import { useTransition } from "react";
+import { customConfirm } from "./confirm-modal";
 
 export function DeleteButton({ id, onDelete, confirmMessage = "Are you sure you want to delete this?" }) {
   const [isPending, startTransition] = useTransition();
 
-  const handleDelete = () => {
-    if (confirm(confirmMessage)) {
+  const handleDelete = async () => {
+    if (await customConfirm(confirmMessage)) {
       startTransition(async () => {
         try {
           await onDelete(id);
         } catch (err) {
-          alert("Failed to delete: " + err.message);
+          window.dispatchEvent(new CustomEvent("dm-toast", {
+            detail: { message: "Failed to delete: " + err.message, type: "error" }
+          }));
         }
       });
     }
