@@ -180,16 +180,15 @@ export default async function PayrollPage() {
       <PageHeader
         action={
           <div className="flex flex-wrap gap-2">
-            <PrimaryButton action="approve-payroll">Approve run</PrimaryButton>
-            <SecondaryButton action="export-payroll">Export register</SecondaryButton>
-            <SecondaryButton href="/">Back to overview</SecondaryButton>
+            <PrimaryButton action="add-payroll-employee">Add New Employee</PrimaryButton>
+            <SecondaryButton action="approve-payroll">Batch Approve Payroll</SecondaryButton>
+            <SecondaryButton action="export-payroll">Export Register</SecondaryButton>
           </div>
         }
-        eyebrow="Payroll control"
-        title="Employee payroll, cash advances, deductions, and release readiness."
+        eyebrow="Employee Management Hub"
+        title="Manage staff, assign projects, process payroll, and handle cash advances."
       >
-        Review gross pay, CA deductions, outstanding balances, net payout, and
-        approval tasks before releasing salaries for the current cut-off.
+        Your central workspace for maintaining the employee roster, updating daily rates, tracking project assignments, and preparing the current payroll cut-off.
       </PageHeader>
 
       <div className="space-y-6 px-5 py-6 lg:px-8">
@@ -265,8 +264,8 @@ export default async function PayrollPage() {
         <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <Panel
             action={<SecondaryButton action="generate-payslip">Batch payslips</SecondaryButton>}
-            subtitle="Per-employee payroll with cash advance handling."
-            title="Payroll Register"
+            subtitle="Manage your employee roster, track assignments, and view per-employee payroll."
+            title="Employee Directory & Payroll"
           >
             <div className="overflow-x-auto">
               <table className="min-w-[1080px] w-full border-separate border-spacing-0 text-left text-sm">

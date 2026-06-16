@@ -13,6 +13,7 @@ function getNextPath() {
 export default function LoginPage() {
   const router = useRouter();
 
+  const [role, setRole] = useState("architect");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -24,7 +25,7 @@ export default function LoginPage() {
 
     startTransition(async () => {
       try {
-        const result = await login({ password });
+        const result = await login({ role, password });
         if (result.success) {
           router.push(getNextPath());
           router.refresh();
@@ -61,7 +62,7 @@ export default function LoginPage() {
 
             <p className="text-base leading-7 text-olive-800">
               Architecture, construction execution, and project controls for
-              the firm. Enter the team access password to continue.
+              the firm. Select your role and enter the access password to continue.
             </p>
 
             <ul className="mt-8 space-y-3 text-sm text-olive-800">
@@ -84,7 +85,7 @@ export default function LoginPage() {
                 Sign in
               </p>
               <h2 className="mt-2 text-xl font-black text-olive-950">
-                Access password
+                Access your workspace
               </h2>
               <p className="mt-2 text-sm leading-6 text-olive-700">
                 A simple gate before entering the dashboard.
@@ -102,6 +103,36 @@ export default function LoginPage() {
             ) : null}
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-olive-700 mb-2">
+                  Select Role
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setRole("architect")}
+                    className={`rounded-xl px-4 py-3 text-sm font-bold transition border ${
+                      role === "architect"
+                        ? "border-olive-800 bg-olive-800 text-lime-50"
+                        : "border-lime-700/20 bg-white text-olive-950 hover:border-lime-600"
+                    }`}
+                  >
+                    Architect
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole("staff")}
+                    className={`rounded-xl px-4 py-3 text-sm font-bold transition border ${
+                      role === "staff"
+                        ? "border-olive-800 bg-olive-800 text-lime-50"
+                        : "border-lime-700/20 bg-white text-olive-950 hover:border-lime-600"
+                    }`}
+                  >
+                    Staff
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label
                   htmlFor="password"

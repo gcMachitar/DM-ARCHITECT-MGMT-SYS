@@ -19,6 +19,8 @@ import {
   updateEmployee,
   createManpower,
   updateManpower,
+  createScheduleEvent,
+  updateScheduleEvent,
 } from "../actions";
 
 const actionSubmitters = {
@@ -37,9 +39,23 @@ const actionSubmitters = {
   "edit-employee": updateEmployee,
   "add-manpower": createManpower,
   "edit-manpower": updateManpower,
+  "add-schedule": createScheduleEvent,
+  "edit-schedule": updateScheduleEvent,
 };
 
 const actionCopy = {
+  "add-schedule": {
+    title: "Add Schedule Event",
+    description: "Add a meeting, site visit, or task to the office calendar.",
+    fields: ["Time", "Event / Meeting", "Location"],
+    result: "Schedule event added.",
+  },
+  "edit-schedule": {
+    title: "Edit Schedule Event",
+    description: "Update the time, event details, or location of an existing schedule.",
+    fields: ["Time", "Event / Meeting", "Location"],
+    result: "Schedule event updated.",
+  },
   "add-manpower": {
     title: "Add Manpower Group",
     description: "Create a new trade, define total count, lead foreman, and active projects.",
@@ -408,10 +424,12 @@ export function ActionButton({
                   const isCurrency = ["Amount", "Budget", "Spent", "CA amount", "Deduct per payroll"].includes(field);
                   const isNumber = ["Crew count", "Total", "Deployed", "Standby", "Progress", "Number of men", "Days worked", "Daily rate", "Overtime", "Cash advance", "CA balance", "Deductions"].includes(field);
                   const isDate = ["Due date", "Target start", "Due"].includes(field);
+                  const isTime = ["Time"].includes(field);
                   
                   let type = "text";
                   if (isNumber) type = "number";
                   if (isDate) type = "date";
+                  if (isTime) type = "time";
 
                   let placeholder = `Enter ${field.toLowerCase()}`;
                   if (isCurrency) placeholder = "e.g., 1.5M or 500K";

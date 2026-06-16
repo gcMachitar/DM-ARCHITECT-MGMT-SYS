@@ -5,15 +5,16 @@ import { usePathname } from "next/navigation";
 import { ActionButton } from "./action-modal";
 import { logout } from "../actions";
 
-const navItems = [
-  ["Overview", "/", "Start here"],
-  ["Projects", "/projects", "Jobs, owners, phases"],
-  ["Manpower", "/manpower", "Men, trades, foremen"],
-  ["Contracts", "/contracts", "Billing and costs"],
-  ["Services", "/services", "Requests and tasks"],
+const allNavItems = [
+  ["Overview", "/", "Start here", ["architect", "staff"]],
+  ["Projects", "/projects", "Jobs, owners, phases", ["architect"]],
+  ["Manpower", "/manpower", "Men, trades, foremen", ["architect"]],
+  ["Payroll & Employees", "/payroll", "Manage staff and pay", ["staff"]],
+  ["Contracts", "/contracts", "Billing and costs", ["architect", "staff"]],
+  ["Services", "/services", "Requests and tasks", ["staff"]],
 ];
 
-export function AppShell({ children }) {
+export function AppShell({ children, role = "architect" }) {
   const pathname = usePathname();
 
   if (pathname === "/login") {
@@ -48,7 +49,7 @@ export function AppShell({ children }) {
         </div>
 
         <nav className="flex gap-2 overflow-x-auto px-4 pb-4 lg:block lg:space-y-2 lg:px-5 lg:pb-0">
-          {navItems.map(([label, href, helper]) => {
+          {allNavItems.filter(item => item[3].includes(role)).map(([label, href, helper]) => {
             const active =
               href === "/" ? pathname === "/" : pathname.startsWith(href);
 

@@ -229,7 +229,7 @@ export async function recordCashAdvance(values) {
 
   const { data: employee } = await supabase
     .from("employees")
-    .select("ca_balance, cash_advance")
+    .select("ca_balance, cash_advance, project")
     .eq("name", name)
     .single();
 
@@ -246,8 +246,27 @@ export async function recordCashAdvance(values) {
       console.error("Error recording cash advance:", error);
       throw new Error(error.message);
     }
+    
+    // Cross-table update: Automatically add to the specific project's "Spent" budget
+    if (employee.project && employee.project !== "Unassigned") {
+      // First, get current project spent amount
+      const { data: projData } = await supabase
+        .from("projects")
+        .select("spent")
+        .eq("name", employee.project)
+        .single();
+        
+      if (projData) {
+        // We assume CA is an operational expense for the project.
+        await supabase
+          .from("projects")
+          .update({ spent: projData.spent + amount })
+          .eq("name", employee.project);
+      }
+    }
   }
 
+  revalidatePath("/");
   revalidatePath("/payroll");
   return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
@@ -322,18 +341,26 @@ export async function submitDailyReport(values) {
 }
 
 export async function login(values) {
-  const { ACCESS_PASSWORD, AUTH_COOKIE_NAME, AUTH_SESSION_MAX_AGE } =
+  const { ARCHITECT_PASSWORD, STAFF_PASSWORD, AUTH_COOKIE_NAME, AUTH_SESSION_MAX_AGE } =
     await import("@/lib/auth-config");
 
   const password = values.password?.trim();
+  const requestedRole = values.role; // "architect" or "staff"
 
-  if (!password || password !== ACCESS_PASSWORD) {
-    throw new Error("Incorrect access password");
+  let userRole = null;
+  if (requestedRole === "architect" && password === ARCHITECT_PASSWORD) {
+    userRole = "architect";
+  } else if (requestedRole === "staff" && password === STAFF_PASSWORD) {
+    userRole = "staff";
+  }
+
+  if (!userRole) {
+    throw new Error("Incorrect access password for the selected role");
   }
 
   const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
-  cookieStore.set(AUTH_COOKIE_NAME, "true", {
+  cookieStore.set(AUTH_COOKIE_NAME, userRole, {
     path: "/",
     maxAge: AUTH_SESSION_MAX_AGE,
     httpOnly: true,
@@ -341,14 +368,19 @@ export async function login(values) {
     sameSite: "lax",
   });
 
-  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
+  return { success: true, timestamp: new Date().toISOString(), user: userRole };
 }
 
 export async function logout() {
   const { AUTH_COOKIE_NAME } = await import("@/lib/auth-config");
   const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
+  
+  // Delete the new role-based cookie
   cookieStore.delete(AUTH_COOKIE_NAME);
+  
+  // Also delete the old legacy cookie just in case it exists
+  cookieStore.delete("dm_authenticated");
 
   const { redirect } = await import("next/navigation");
   redirect("/login");
@@ -432,13 +464,18 @@ export async function deleteContract(id) {
 export async function updateContract(id, values) {
   console.log("updateContract called with ID:", id, "values:", values, "type:", typeof values);
   const supabase = getClient();
-  const dbData = typeof values === "string" ? { status: values } : {
+  let dbData = typeof values === "string" ? { status: values } : {
     item: values["Billing description"] || values["Item"],
     project: values["Project"],
     amount: values["Amount"],
     status: values["Status"],
     owner: values["Owner"]
   };
+
+  // Cross-role workflow: When Architect approves, flag it explicitly for Staff payment
+  if (dbData.status === "Approved") {
+    dbData.status = "Approved - Ready for Payment";
+  }
 
   Object.keys(dbData).forEach(key => {
     if (dbData[key] === undefined) {
@@ -609,6 +646,63 @@ export async function deleteManpower(id) {
 
   revalidatePath("/");
   revalidatePath("/manpower");
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
+}
+
+export async function createScheduleEvent(values) {
+  const supabase = getClient();
+  const time = values["Time"] || "08:00";
+  const item = values["Event / Meeting"] || "New Event";
+  const place = values["Location"] || "Main office";
+
+  const { error } = await supabase.from("schedules").insert({
+    time,
+    item,
+    place,
+  });
+
+  if (error) {
+    console.error("Error creating schedule:", error);
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
+}
+
+export async function updateScheduleEvent(id, values) {
+  const supabase = getClient();
+  const dbData = {
+    time: values["Time"],
+    item: values["Event / Meeting"],
+    place: values["Location"],
+  };
+
+  Object.keys(dbData).forEach(key => {
+    if (dbData[key] === undefined) {
+      delete dbData[key];
+    }
+  });
+
+  const { error } = await supabase.from("schedules").update(dbData).eq("id", id);
+  if (error) {
+    console.error("Error updating schedule:", error);
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
+}
+
+export async function deleteScheduleEvent(id) {
+  const supabase = getClient();
+  const { error } = await supabase.from("schedules").delete().eq("id", id);
+  if (error) {
+    console.error("Error deleting schedule:", error);
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
   return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 

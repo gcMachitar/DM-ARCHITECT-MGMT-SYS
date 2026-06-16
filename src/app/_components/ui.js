@@ -2,12 +2,12 @@ import { ActionButton } from "./action-modal";
 
 export function PageHeader({ eyebrow, title, children, action }) {
   return (
-    <div className="flex flex-col gap-4 border-b border-lime-900/10 bg-[#d8edbf] px-5 py-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
+    <div className="flex flex-col gap-4 border-b border-lime-900/10 bg-gradient-to-r from-[#d8edbf] to-[#edf7e4] px-5 py-8 lg:flex-row lg:items-end lg:justify-between lg:px-8 shadow-sm">
       <div>
         <p className="text-xs font-black uppercase tracking-[0.18em] text-olive-700">
           {eyebrow}
         </p>
-        <h1 className="mt-2 max-w-4xl text-3xl font-black leading-tight text-olive-950 lg:text-4xl">
+        <h1 className="mt-2 max-w-4xl text-3xl font-black leading-tight text-olive-950 lg:text-4xl drop-shadow-sm">
           {title}
         </h1>
         {children ? (
@@ -29,7 +29,7 @@ export function StatCard({ icon, label, value, note, tone = "light" }) {
 
   return (
     <div
-      className={`surface-pop rounded-lg border border-lime-700/15 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${toneClass}`}
+      className={`surface-pop rounded-xl border border-lime-700/15 p-5 shadow-sm backdrop-blur-md transition-all hover:-translate-y-1 hover:shadow-lg ${toneClass}`}
     >
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-wide opacity-75">
@@ -58,9 +58,11 @@ export function ProgressBar({ value, label = "Progress" }) {
       role="progressbar"
     >
       <div
-        className="h-full rounded-full bg-[#98c83d]"
+        className="relative h-full rounded-full bg-gradient-to-r from-[#8bbd31] to-[#98c83d] overflow-hidden"
         style={{ width: `${value}%` }}
-      />
+      >
+        <div className="absolute inset-0 shimmer-bg" />
+      </div>
     </div>
   );
 }
@@ -75,7 +77,7 @@ export function StatusPill({ children, tone = "neutral" }) {
 
   return (
     <span
-      className={`inline-flex whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-bold ring-1 ${tones[tone]}`}
+      className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold ring-1 shadow-sm backdrop-blur-sm ${tones[tone]}`}
     >
       {children}
     </span>
@@ -84,8 +86,8 @@ export function StatusPill({ children, tone = "neutral" }) {
 
 export function Panel({ title, subtitle, children, action }) {
   return (
-    <section className="surface-pop rounded-lg border border-lime-700/15 bg-white/85 shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-lime-900/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <section className="surface-pop rounded-xl border border-white/40 bg-white/60 backdrop-blur-xl shadow-lg ring-1 ring-lime-900/5 transition-all hover:shadow-xl">
+      <div className="flex flex-col gap-3 border-b border-lime-900/10 p-5 sm:flex-row sm:items-center sm:justify-between bg-white/40 rounded-t-xl">
         <div>
           <h2 className="text-lg font-black text-olive-950">{title}</h2>
           {subtitle ? (

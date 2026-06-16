@@ -13,7 +13,8 @@
 }
 
 body {
-  background: var(--background);
+  background: radial-gradient(circle at -10% -10%, #d8edbf 0%, #edf7e4 30%, #f8fcf1 70%, #d8edbf 120%);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
@@ -56,8 +57,8 @@ html {
 .focus-card:hover,
 .project-card:hover,
 .metric-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgb(38 63 25 / 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgb(38 63 25 / 0.12), 0 0 0 1px rgb(152 200 61 / 0.2);
 }
 
 .icon-tile,
@@ -383,16 +384,22 @@ html {
 
   @keyframes progress-shine {
     0% {
-      filter: brightness(1);
+      background-position: 200% center;
     }
-
-    45% {
-      filter: brightness(1.13);
-    }
-
     100% {
-      filter: brightness(1);
+      background-position: -200% center;
     }
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(
+      120deg,
+      rgba(255,255,255,0) 30%,
+      rgba(255,255,255,0.4) 50%,
+      rgba(255,255,255,0) 70%
+    );
+    background-size: 200% auto;
+    animation: progress-shine 2s linear infinite;
   }
 }
 
