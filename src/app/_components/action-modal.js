@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
-import { supabase } from "@/lib/supabase";
+
 import { projects as mockProjects } from "../data";
 import { customConfirm } from "./confirm-modal";
 import {
@@ -23,6 +23,8 @@ import {
   updateManpower,
   createScheduleEvent,
   updateScheduleEvent,
+  getProjectsList,
+  getEmployeesList,
 } from "../actions";
 
 const actionSubmitters = {
@@ -257,10 +259,9 @@ export function ActionButton({
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const { data, error } = await supabase.from("projects").select("name").order("name", { ascending: true });
-        if (error) throw error;
+        const data = await getProjectsList();
         if (data && data.length > 0) {
-          setProjectsList(data.map(p => p.name));
+          setProjectsList(data);
         } else {
           setProjectsList(mockProjects.map(p => p.name));
         }
@@ -275,10 +276,9 @@ export function ActionButton({
   useEffect(() => {
     async function fetchEmployees() {
       try {
-        const { data, error } = await supabase.from("employees").select("name").order("name", { ascending: true });
-        if (error) throw error;
+        const data = await getEmployeesList();
         if (data && data.length > 0) {
-          setEmployeesList(data.map(e => e.name));
+          setEmployeesList(data);
         } else {
           setEmployeesList(["Ramon Bautista", "Joey Santos", "Arnel Cruz", "Mila Reyes", "Dennis Lim"]);
         }

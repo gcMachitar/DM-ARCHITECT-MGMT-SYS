@@ -706,4 +706,25 @@ export async function deleteScheduleEvent(id) {
   return { success: true, timestamp: new Date().toISOString(), user: 'Admin' };
 }
 
+export async function getProjectsList() {
+  const supabase = getClient();
+  const { data, error } = await supabase.from("projects").select("name").order("name", { ascending: true });
+  if (error) {
+    console.error("Error fetching projects for dropdown list:", error);
+    throw new Error(error.message);
+  }
+  return (data || []).map(p => p.name);
+}
+
+export async function getEmployeesList() {
+  const supabase = getClient();
+  const { data, error } = await supabase.from("employees").select("name").order("name", { ascending: true });
+  if (error) {
+    console.error("Error fetching employees for dropdown list:", error);
+    throw new Error(error.message);
+  }
+  return (data || []).map(e => e.name);
+}
+
+
 
