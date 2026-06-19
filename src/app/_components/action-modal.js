@@ -3,6 +3,8 @@
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
+import { supabase } from "@/lib/supabase";
+import { projects as mockProjects } from "../data";
 import { customConfirm } from "./confirm-modal";
 import {
   createProject,
@@ -249,6 +251,61 @@ export function ActionButton({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const copy = actionCopy[action] || actionCopy["work-order"];
   const hasValues = Object.keys(values).length > 0;
+  const [projectsList, setProjectsList] = useState([]);
+  const [employeesList, setEmployeesList] = useState([]);
+
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const { data, error } = await supabase.from("projects").select("name").order("name", { ascending: true });
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setProjectsList(data.map(p => p.name));
+        } else {
+          setProjectsList(mockProjects.map(p => p.name));
+        }
+      } catch (err) {
+        console.error("Failed to fetch projects for dropdown:", err);
+        setProjectsList(mockProjects.map(p => p.name));
+      }
+    }
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    async function fetchEmployees() {
+      try {
+        const { data, error } = await supabase.from("employees").select("name").order("name", { ascending: true });
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setEmployeesList(data.map(e => e.name));
+        } else {
+          setEmployeesList(["Ramon Bautista", "Joey Santos", "Arnel Cruz", "Mila Reyes", "Dennis Lim"]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch employees for dropdown:", err);
+        setEmployeesList(["Ramon Bautista", "Joey Santos", "Arnel Cruz", "Mila Reyes", "Dennis Lim"]);
+      }
+    }
+    fetchEmployees();
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      const newValues = { ...(initialValues || {}) };
+      copy.fields.forEach(field => {
+        if (["Project", "Project / department"].includes(field) && !newValues[field]) {
+          const defaultVal = field === "Project / department" ? "Main Office" : "General";
+          const firstProj = projectsList.length > 0 ? projectsList[0] : defaultVal;
+          newValues[field] = firstProj;
+        }
+        if (field === "Employee" && !newValues[field]) {
+          newValues[field] = employeesList.length > 0 ? employeesList[0] : "";
+        }
+      });
+      setValues(newValues);
+    }
+  }, [open, projectsList, employeesList, initialValues, copy.fields]);
 
   function closeModal() {
     setOpen(false);
@@ -425,7 +482,59 @@ export function ActionButton({
                   const isNumber = ["Crew count", "Total", "Deployed", "Standby", "Progress", "Number of men", "Days worked", "Daily rate", "Overtime", "Cash advance", "CA balance", "Deductions"].includes(field);
                   const isDate = ["Due date", "Target start", "Due"].includes(field);
                   const isTime = ["Time"].includes(field);
+                  const isProjectSelect = ["Project", "Project / department"].includes(field);
+                  const isEmployeeSelect = field === "Employee";
                   
+                  if (isProjectSelect) {
+                    const optionsList = [...projectsList];
+                    const defaultVal = field === "Project / department" ? "Main Office" : "General";
+                    if (!optionsList.includes(defaultVal)) {
+                      optionsList.unshift(defaultVal);
+                    }
+                    return (
+                      <select
+                        className="mt-1 w-full rounded-md border border-lime-700/20 bg-white px-3 py-2.5 text-sm text-olive-950 outline-none focus:border-lime-600 focus:ring-1 focus:ring-lime-600"
+                        onChange={(event) =>
+                          setValues((current) => ({
+                            ...current,
+                            [field]: event.target.value,
+                          }))
+                        }
+                        value={values[field] || ""}
+                        required
+                      >
+                        {optionsList.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  }
+
+                  if (isEmployeeSelect) {
+                    const optionsList = [...employeesList];
+                    return (
+                      <select
+                        className="mt-1 w-full rounded-md border border-lime-700/20 bg-white px-3 py-2.5 text-sm text-olive-950 outline-none focus:border-lime-600 focus:ring-1 focus:ring-lime-600"
+                        onChange={(event) =>
+                          setValues((current) => ({
+                            ...current,
+                            [field]: event.target.value,
+                          }))
+                        }
+                        value={values[field] || ""}
+                        required
+                      >
+                        {optionsList.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  }
+
                   let type = "text";
                   if (isNumber) type = "number";
                   if (isDate) type = "date";
@@ -503,7 +612,7 @@ export function ActionButton({
               ) : copy.fileName ? (
                 "Save and download"
               ) : (
-                "Save draft"
+                "Save"
               )}
             </button>
           </div>

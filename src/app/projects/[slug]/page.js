@@ -226,7 +226,7 @@ async function ContractsTab({ project }) {
       </div>
 
       <Panel
-        action={<PrimaryButton action="new-billing">New billing</PrimaryButton>}
+        action={<PrimaryButton action="new-billing" initialValues={{ Project: project.name }}>New billing</PrimaryButton>}
         title="Contracts & Billings"
         subtitle="Financial items for this project"
       >
@@ -249,8 +249,8 @@ async function ContractsTab({ project }) {
                   <td className="px-4 py-4">
                     <StatusDropdown
                       id={c.id}
-                      currentValue={c.status}
-                      options={["Drafting", "Client review", "For approval", "Accounting"]}
+                      currentValue={c.status === "Approved - Ready for Payment" ? "Approved" : c.status}
+                      options={["Drafting", "Client review", "For approval", "Approved", "Accounting"]}
                       onUpdate={updateContract}
                     />
                   </td>
@@ -285,7 +285,7 @@ async function ServicesTab({ project }) {
 
   return (
     <Panel
-      action={<PrimaryButton action="log-request">Log request</PrimaryButton>}
+      action={<PrimaryButton action="log-request" initialValues={{ Project: project.name }}>Log request</PrimaryButton>}
       title="Services & Requests"
       subtitle="Service items for this project"
     >

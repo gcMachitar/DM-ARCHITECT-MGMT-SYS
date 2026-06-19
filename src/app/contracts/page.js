@@ -110,8 +110,8 @@ export default async function ContractsPage(props) {
                       <td className="px-4 py-4">
                         <StatusDropdown
                           id={c.id}
-                          currentValue={c.status}
-                          options={["Drafting", "Client review", "For approval", "Accounting"]}
+                          currentValue={c.status === "Approved - Ready for Payment" ? "Approved" : c.status}
+                          options={["Drafting", "Client review", "For approval", "Approved", "Accounting"]}
                           onUpdate={updateContract}
                         />
                       </td>
