@@ -12,6 +12,7 @@ const allNavItems = [
   ["Payroll & Employees", "/payroll", "Manage staff and pay", ["staff"]],
   ["Contracts", "/contracts", "Billing and costs", ["architect", "staff"]],
   ["Services", "/services", "Requests and tasks", ["staff"]],
+  ["Guide", "/guide", "How to use the system", ["architect", "staff"]],
 ];
 
 export function AppShell({ children, role = "architect" }) {
