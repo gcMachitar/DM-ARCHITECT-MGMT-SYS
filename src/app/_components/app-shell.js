@@ -6,13 +6,13 @@ import { ActionButton } from "./action-modal";
 import { logout } from "../actions";
 
 const allNavItems = [
+  ["Guide", "/guide", "How to use the system", ["architect", "staff"]],
   ["Overview", "/", "Start here", ["architect", "staff"]],
   ["Projects", "/projects", "Jobs, owners, phases", ["architect"]],
   ["Manpower", "/manpower", "Men, trades, foremen", ["architect"]],
   ["Payroll & Employees", "/payroll", "Manage staff and pay", ["staff"]],
   ["Contracts", "/contracts", "Billing and costs", ["architect", "staff"]],
   ["Services", "/services", "Requests and tasks", ["staff"]],
-  ["Guide", "/guide", "How to use the system", ["architect", "staff"]],
 ];
 
 export function AppShell({ children, role = "architect" }) {
@@ -79,7 +79,7 @@ export function AppShell({ children, role = "architect" }) {
           >
             <span>Sign Out</span>
             <span className="hidden text-xs font-semibold text-red-700/80 lg:mt-1 lg:block">
-              Exit operations command
+              {role === "staff" ? "Exit workspace" : "Exit operations command"}
             </span>
           </button>
         </nav>
@@ -102,25 +102,27 @@ export function AppShell({ children, role = "architect" }) {
       </aside>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-10 border-b border-lime-900/10 bg-[#f5faee]/90 px-5 py-3 backdrop-blur lg:px-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-olive-700">
-                Operations Command
-              </p>
-              <p className="text-sm text-olive-800">
-                Use the left menu for major areas. Use page buttons to draft
-                reports, assignments, billing, and requests.
-              </p>
+        {role !== "staff" && (
+          <header className="sticky top-0 z-10 border-b border-lime-900/10 bg-[#f5faee]/90 px-5 py-3 backdrop-blur lg:px-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-olive-700">
+                  Operations Command
+                </p>
+                <p className="text-sm text-olive-800">
+                  Use the left menu for major areas. Use page buttons to draft
+                  reports, assignments, billing, and requests.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <ActionButton action="daily-report" variant="secondary">
+                  Daily Report
+                </ActionButton>
+                <ActionButton action="new-project">New Project</ActionButton>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <ActionButton action="daily-report" variant="secondary">
-                Daily Report
-              </ActionButton>
-              <ActionButton action="new-project">New Project</ActionButton>
-            </div>
-          </div>
-        </header>
+          </header>
+        )}
         {children}
       </div>
     </div>

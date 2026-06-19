@@ -74,38 +74,58 @@ export async function assignCrew(values) {
 
   if (projectName) {
     // 1. Update project crew count
-    const { data: project } = await supabase
+    const { data: project, error: fetchProjError } = await supabase
       .from("projects")
       .select("crew")
       .eq("name", projectName)
       .single();
 
+    if (fetchProjError) {
+      console.error("Error fetching project for crew assignment:", fetchProjError);
+      throw new Error(fetchProjError.message);
+    }
+
     if (project) {
-      await supabase
+      const { error: updateProjError } = await supabase
         .from("projects")
         .update({ crew: project.crew + count })
         .eq("name", projectName);
+
+      if (updateProjError) {
+        console.error("Error updating project crew:", updateProjError);
+        throw new Error(updateProjError.message);
+      }
     }
   }
 
   if (tradeName) {
     // 2. Update manpower trade balance
-    const { data: tradeGroup } = await supabase
+    const { data: tradeGroup, error: fetchTradeError } = await supabase
       .from("manpower")
       .select("deployed, standby, total")
       .eq("trade", tradeName)
       .single();
 
+    if (fetchTradeError) {
+      console.error("Error fetching manpower group:", fetchTradeError);
+      throw new Error(fetchTradeError.message);
+    }
+
     if (tradeGroup) {
       const newDeployed = Math.min(tradeGroup.total, tradeGroup.deployed + count);
       const newStandby = Math.max(0, tradeGroup.total - newDeployed);
-      await supabase
+      const { error: updateTradeError } = await supabase
         .from("manpower")
         .update({
           deployed: newDeployed,
           standby: newStandby,
         })
         .eq("trade", tradeName);
+
+      if (updateTradeError) {
+        console.error("Error updating manpower deployment:", updateTradeError);
+        throw new Error(updateTradeError.message);
+      }
     }
   }
 
@@ -151,12 +171,20 @@ export async function createBilling(values) {
 
   // Update project spent metric
   if (project !== "General") {
-    const { data: projData } = await supabase.from("projects").select("spent").eq("name", project).single();
+    const { data: projData, error: fetchProjError } = await supabase.from("projects").select("spent").eq("name", project).single();
+    if (fetchProjError) {
+      console.error("Error fetching project spent for billing:", fetchProjError);
+      throw new Error(fetchProjError.message);
+    }
     if (projData) {
       const currentSpent = parseCurrency(projData.spent);
       const addedAmount = parseCurrency(amountStr);
       const newSpent = formatCurrency(currentSpent + addedAmount);
-      await supabase.from("projects").update({ spent: newSpent }).eq("name", project);
+      const { error: updateProjError } = await supabase.from("projects").update({ spent: newSpent }).eq("name", project);
+      if (updateProjError) {
+        console.error("Error updating project spent for billing:", updateProjError);
+        throw new Error(updateProjError.message);
+      }
     }
   }
 
@@ -227,11 +255,16 @@ export async function recordCashAdvance(values) {
   const amount = parseInt(values["CA amount"]) || 0;
   const deduct = parseInt(values["Deduct per payroll"]) || 0;
 
-  const { data: employee } = await supabase
+  const { data: employee, error: fetchEmpError } = await supabase
     .from("employees")
     .select("ca_balance, cash_advance, project")
     .eq("name", name)
     .single();
+
+  if (fetchEmpError) {
+    console.error("Error fetching employee for cash advance:", fetchEmpError);
+    throw new Error(fetchEmpError.message);
+  }
 
   if (employee) {
     const { error } = await supabase
@@ -250,18 +283,30 @@ export async function recordCashAdvance(values) {
     // Cross-table update: Automatically add to the specific project's "Spent" budget
     if (employee.project && employee.project !== "Unassigned") {
       // First, get current project spent amount
-      const { data: projData } = await supabase
+      const { data: projData, error: fetchProjError } = await supabase
         .from("projects")
         .select("spent")
         .eq("name", employee.project)
         .single();
         
+      if (fetchProjError) {
+        console.error("Error fetching project spent for cash advance:", fetchProjError);
+        throw new Error(fetchProjError.message);
+      }
+
       if (projData) {
         // We assume CA is an operational expense for the project.
-        await supabase
+        const currentSpent = parseCurrency(projData.spent);
+        const newSpent = formatCurrency(currentSpent + amount);
+        const { error: updateProjError } = await supabase
           .from("projects")
-          .update({ spent: projData.spent + amount })
+          .update({ spent: newSpent })
           .eq("name", employee.project);
+
+        if (updateProjError) {
+          console.error("Error updating project spent for cash advance:", updateProjError);
+          throw new Error(updateProjError.message);
+        }
       }
     }
   }
@@ -397,8 +442,16 @@ export async function deleteProject(slug) {
   }
 
   if (project) {
-    await supabase.from("contracts").delete().eq("project", project.name);
-    await supabase.from("service_requests").delete().eq("project", project.name);
+    const { error: contractDeleteError } = await supabase.from("contracts").delete().eq("project", project.name);
+    if (contractDeleteError) {
+      console.error("Error deleting contracts associated with project:", contractDeleteError);
+      throw new Error(contractDeleteError.message);
+    }
+    const { error: requestDeleteError } = await supabase.from("service_requests").delete().eq("project", project.name);
+    if (requestDeleteError) {
+      console.error("Error deleting service requests associated with project:", requestDeleteError);
+      throw new Error(requestDeleteError.message);
+    }
   }
 
   revalidatePath("/");
@@ -605,7 +658,11 @@ export async function createManpower(values) {
 
 export async function updateManpower(id, values) {
   const supabase = getClient();
-  const { data: current } = await supabase.from("manpower").select("total, deployed").eq("id", id).single();
+  const { data: current, error: fetchManpowerError } = await supabase.from("manpower").select("total, deployed").eq("id", id).single();
+  if (fetchManpowerError) {
+    console.error("Error fetching manpower group for update:", fetchManpowerError);
+    throw new Error(fetchManpowerError.message);
+  }
   const newTotal = values["Total"] !== undefined ? (parseInt(values["Total"]) || 0) : (current?.total || 0);
   const newDeployed = values["Deployed"] !== undefined ? (parseInt(values["Deployed"]) || 0) : (current?.deployed || 0);
   const standby = Math.max(0, newTotal - newDeployed);

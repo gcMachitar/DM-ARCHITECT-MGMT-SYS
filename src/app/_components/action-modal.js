@@ -460,12 +460,14 @@ export function ActionButton({
               </p>
             </div>
             <button
-              aria-label="Cancel action"
-              className="rounded-md border border-lime-700/25 bg-white px-3 py-2 text-sm font-black text-olive-800 transition hover:bg-lime-50"
+              aria-label="Close"
+              className="rounded-md border border-lime-700/25 bg-white p-2 text-olive-800 transition hover:bg-lime-50"
               onClick={handleClose}
               type="button"
             >
-              Cancel
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>
