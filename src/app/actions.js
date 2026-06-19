@@ -198,7 +198,7 @@ export async function logRequest(values) {
   const supabase = getClient();
   const task = values["Request"] || "New service request";
   const project = values["Project"] || "General";
-  const owner = values["Assigned team"] || "Office";
+  const owner = values["Owner"] || "Office";
 
   const { error } = await supabase.from("service_requests").insert({
     task,

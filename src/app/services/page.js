@@ -10,6 +10,7 @@ import {
 } from "../_components/ui";
 import { DeleteButton } from "../_components/delete-button";
 import { StatusDropdown } from "../_components/status-dropdown";
+import { ActionButton } from "../_components/action-modal";
 import { deleteServiceRequest, updateServiceRequest } from "../actions";
 import { ProjectFilter } from "../_components/project-filter";
 
@@ -135,11 +136,27 @@ export default async function ServicesPage(props) {
                         />
                       </td>
                       <td className="px-4 py-4 text-sm text-right">
-                        <DeleteButton
-                          id={r.id}
-                          onDelete={deleteServiceRequest}
-                          confirmMessage={`Are you sure you want to delete request "${r.task}"?`}
-                        />
+                        <div className="flex items-center justify-end gap-2">
+                          <ActionButton
+                            action="edit-request"
+                            variant="secondary"
+                            targetId={r.id}
+                            initialValues={{
+                              "Request": r.task,
+                              "Project": r.project,
+                              "Owner": r.owner,
+                              "Due date": r.due,
+                              "Stage": r.stage || (index % 2 === 0 ? "Review" : "In progress"),
+                            }}
+                          >
+                            Edit
+                          </ActionButton>
+                          <DeleteButton
+                            id={r.id}
+                            onDelete={deleteServiceRequest}
+                            confirmMessage={`Are you sure you want to delete request "${r.task}"?`}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}

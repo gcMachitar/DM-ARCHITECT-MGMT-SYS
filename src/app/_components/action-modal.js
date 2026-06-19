@@ -23,6 +23,7 @@ import {
   updateManpower,
   createScheduleEvent,
   updateScheduleEvent,
+  updateServiceRequest,
   getProjectsList,
   getEmployeesList,
 } from "../actions";
@@ -45,6 +46,7 @@ const actionSubmitters = {
   "edit-manpower": updateManpower,
   "add-schedule": createScheduleEvent,
   "edit-schedule": updateScheduleEvent,
+  "edit-request": updateServiceRequest,
 };
 
 const actionCopy = {
@@ -171,8 +173,14 @@ const actionCopy = {
     title: "Log Request",
     description:
       "Capture design questions, procurement needs, site issues, client approvals, and turnover tasks.",
-    fields: ["Request", "Project", "Assigned team"],
+    fields: ["Request", "Project", "Owner"],
     result: "Request logged in the service queue.",
+  },
+  "edit-request": {
+    title: "Edit Service Request",
+    description: "Update the details, assignee/owner, due date, or stage of the service request.",
+    fields: ["Request", "Project", "Owner", "Due date", "Stage"],
+    result: "Service request updated.",
   },
   "assign-selected": {
     title: "Assign Selected Requests",
@@ -301,6 +309,9 @@ export function ActionButton({
         }
         if (field === "Employee" && !newValues[field]) {
           newValues[field] = employeesList.length > 0 ? employeesList[0] : "";
+        }
+        if (field === "Stage" && !newValues[field]) {
+          newValues[field] = "Review";
         }
       });
       setValues(newValues);
@@ -531,6 +542,28 @@ export function ActionButton({
                         {optionsList.map((name) => (
                           <option key={name} value={name}>
                             {name}
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  }
+
+                  if (field === "Stage") {
+                    return (
+                      <select
+                        className="mt-1 w-full rounded-md border border-lime-700/20 bg-white px-3 py-2.5 text-sm text-olive-950 outline-none focus:border-lime-600 focus:ring-1 focus:ring-lime-600"
+                        onChange={(event) =>
+                          setValues((current) => ({
+                            ...current,
+                            [field]: event.target.value,
+                          }))
+                        }
+                        value={values[field] || ""}
+                        required
+                      >
+                        {["Review", "In progress", "Done"].map((stage) => (
+                          <option key={stage} value={stage}>
+                            {stage}
                           </option>
                         ))}
                       </select>
