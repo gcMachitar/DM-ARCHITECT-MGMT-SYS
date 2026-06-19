@@ -263,6 +263,7 @@ export function ActionButton({
   const hasValues = Object.keys(values).length > 0;
   const [projectsList, setProjectsList] = useState([]);
   const [employeesList, setEmployeesList] = useState([]);
+  const [customFields, setCustomFields] = useState({});
 
   useEffect(() => {
     async function fetchProjects() {
@@ -301,6 +302,7 @@ export function ActionButton({
   useEffect(() => {
     if (open) {
       const newValues = { ...(initialValues || {}) };
+      const initialCustom = {};
       copy.fields.forEach(field => {
         if (["Project", "Project / department"].includes(field) && !newValues[field]) {
           const defaultVal = field === "Project / department" ? "Main Office" : "General";
@@ -313,14 +315,26 @@ export function ActionButton({
         if (field === "Stage" && !newValues[field]) {
           newValues[field] = "Review";
         }
+        if (["Trade", "Role"].includes(field)) {
+          if (!newValues[field]) {
+            newValues[field] = "Masonry";
+          } else {
+            const standardOptions = ["Masonry", "Electrical", "Carpentry", "Painting", "Foremen"];
+            if (!standardOptions.includes(newValues[field])) {
+              initialCustom[field] = true;
+            }
+          }
+        }
       });
       setValues(newValues);
+      setCustomFields(initialCustom);
     }
   }, [open, projectsList, employeesList, initialValues, copy.fields]);
 
   function closeModal() {
     setOpen(false);
     setValues({});
+    setCustomFields({});
   }
 
   async function handleClose() {
@@ -545,6 +559,54 @@ export function ActionButton({
                           </option>
                         ))}
                       </select>
+                    );
+                  }
+
+                  if (["Trade", "Role"].includes(field)) {
+                    const standardOptions = ["Masonry", "Electrical", "Carpentry", "Painting", "Foremen"];
+                    const isCustomMode = customFields[field];
+                    const currentValue = values[field] || "";
+                    const dropdownValue = isCustomMode ? "Custom" : currentValue;
+
+                    return (
+                      <div className="space-y-2 mt-1">
+                        <select
+                          className="w-full rounded-md border border-lime-700/20 bg-white px-3 py-2.5 text-sm text-olive-950 outline-none focus:border-lime-600 focus:ring-1 focus:ring-lime-600"
+                          onChange={(event) => {
+                            const val = event.target.value;
+                            if (val === "Custom") {
+                              setCustomFields(prev => ({ ...prev, [field]: true }));
+                              setValues(prev => ({ ...prev, [field]: "" }));
+                            } else {
+                              setCustomFields(prev => ({ ...prev, [field]: false }));
+                              setValues(prev => ({ ...prev, [field]: val }));
+                            }
+                          }}
+                          value={dropdownValue}
+                          required
+                        >
+                          {standardOptions.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                          <option value="Custom">Custom...</option>
+                        </select>
+
+                        {isCustomMode && (
+                          <input
+                            type="text"
+                            placeholder="Specify custom role or trade"
+                            className="w-full rounded-md border border-lime-700/20 bg-white px-3 py-2.5 text-sm text-olive-950 outline-none focus:border-lime-600 focus:ring-1 focus:ring-lime-600 font-medium"
+                            onChange={(event) => {
+                              const typedVal = event.target.value;
+                              setValues(prev => ({ ...prev, [field]: typedVal }));
+                            }}
+                            value={currentValue}
+                            required
+                          />
+                        )}
+                      </div>
                     );
                   }
 

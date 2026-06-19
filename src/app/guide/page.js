@@ -101,7 +101,7 @@ export default async function GuidePage(props) {
                     <div>
                       <h3 className="font-bold text-olive-950">Deploy Site Crew</h3>
                       <p className="mt-1.5 text-sm leading-6 text-olive-700">
-                        Navigate to the **Manpower** workspace. Click the **Assign Crew** button. Select the target project, pick the trade trade (e.g. Masonry, Electrical, Carpentry, Painting), and input the number of workers to move. The dashboard subtracts these from standby and deploys them to the site.
+                        Navigate to the **Manpower** workspace. Click the **Assign Crew** button. Select the target project, select the trade (Masonry, Electrical, Carpentry, Painting, Foremen, or specify a Custom trade), and input the number of workers to move. The dashboard subtracts these from standby and deploys them to the site.
                       </p>
                     </div>
                   </div>
@@ -188,7 +188,7 @@ export default async function GuidePage(props) {
                     <div>
                       <h3 className="font-bold text-olive-950">Register New Staff / Workers</h3>
                       <p className="mt-1.5 text-sm leading-6 text-olive-700">
-                        Go to **Payroll & Employees** and click the **Add New Employee** button. Input the employee name, role (e.g., Laborer, Electrician), current project assignment, and daily rate. They will immediately be added to the directory list.
+                        Go to **Payroll & Employees** and click the **Add New Employee** button. Input the employee name, select their role (Masonry, Electrical, Carpentry, Painting, Foremen, or specify a Custom role), current project assignment, and daily rate. They will immediately be added to the directory list.
                       </p>
                     </div>
                   </div>
